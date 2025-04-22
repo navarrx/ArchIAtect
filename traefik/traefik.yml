@@ -1,0 +1,44 @@
+# Traefik configuration file
+
+# Global configuration
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+# API and dashboard configuration
+api:
+  dashboard: true
+  insecure: true  # For development only, use secure: true with proper authentication in production
+
+# Entry points configuration
+entryPoints:
+  web:
+    address: ":80"
+    # Uncomment for automatic HTTPS redirection in production
+    # http:
+    #   redirections:
+    #     entryPoint:
+    #       to: websecure
+    #       scheme: https
+
+  websecure:
+    address: ":443"
+
+# Configure providers
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: traefik-public
+    watch: true
+
+# Log configuration
+log:
+  level: DEBUG  # Changed from INFO to DEBUG for more detailed logs
+  format: common
+
+# Access logs
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  bufferingSize: 100
+  format: common
