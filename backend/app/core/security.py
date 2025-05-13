@@ -6,7 +6,13 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Configure password hashing with specific bcrypt settings
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__rounds=12,  # Use a standard number of rounds
+    bcrypt__ident="2b"  # Use the 2b version of bcrypt
+)
 
 ALGORITHM = "HS256"
 
