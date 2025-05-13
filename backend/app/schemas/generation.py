@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import List, Optional
 from datetime import datetime
 
 class GenerationBase(BaseModel):
@@ -8,20 +8,23 @@ class GenerationBase(BaseModel):
     prompt: Optional[str] = None
 
 class GenerationCreate(GenerationBase):
-    pass
+    user_id: int
 
 class GenerationRequest(BaseModel):
-    prompt: str
+    prompt: str = Field(..., description="The prompt to generate the floor plan from")
 
 class GenerationResponse(BaseModel):
-    prompt: str
-    layout_image_url: str
-    sd_image_url: str
-    
+    id: int = Field(..., description="Unique identifier for the generation")
+    prompt: str = Field(..., description="The prompt used for generation")
+    image_url: str = Field(..., description="URL to the generated image in GCS")
+    created_at: datetime = Field(..., description="When the generation was created")
+    status: str = Field(..., description="Status of the generation (success/failed)")
+    error_message: Optional[str] = Field(None, description="Error message if generation failed")
+
 class GenerationOut(GenerationBase):
     id: int
     user_id: int
     created_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
