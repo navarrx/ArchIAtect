@@ -21,8 +21,12 @@ class FloorPlanGenerator:
         self.use_stable_diffusion = use_stable_diffusion
         if self.use_stable_diffusion:
             try:
+                # Obtener la ruta del directorio actual del pipeline
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                lora_path = os.path.join(current_dir, "..", "lora", "floorplan_lora_weights.safetensors")
+                
                 self.sd_module = StableDiffusionControlNetModule(
-                    lora_path="./lora/floorplan_lora_weights.safetensors"  # ✅ LoRA cargado y usado
+                    lora_path=lora_path
                 )
                 print("✅ Stable Diffusion + ControlNet + LoRA module initialized successfully.")
             except Exception as e:
