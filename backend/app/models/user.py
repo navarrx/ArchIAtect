@@ -1,20 +1,18 @@
-from sqlalchemy import Boolean, Column, String
+from sqlalchemy import Column, Integer, String, Text, DateTime
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
+from .base import Base
 
-from app.models.base import Base, TimestampMixin
-
-
-class User(Base, TimestampMixin):
+class User(Base):
     __tablename__ = "users"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    hashed_password = Column(String, nullable=False)
-    full_name = Column(String, nullable=True)
-    is_active = Column(Boolean, default=True)
-    is_superuser = Column(Boolean, default=False)
+    password_hash = Column(Text, nullable=True)
+    google_id = Column(String, unique=True, nullable=True)
+    name = Column(String, nullable=True)
+    profile_picture_url = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    # Relationships
-    floor_plans = relationship("FloorPlan", back_populates="user")
-    reference_images = relationship("ReferenceImage", back_populates="user")
-    preferences = relationship("UserPreference", back_populates="user", uselist=False)
+    generations = relationship("Generation", back_populates="user")
+    favourites = relationship("Favourite", back_populates="user", cascade="all, delete-orphan")

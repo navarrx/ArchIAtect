@@ -1,17 +1,17 @@
-from sqlalchemy import Column, Integer, Stirng, Text, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
 from sqlalchemy.orm import relationship
 from .base import Base
-from sqlalchemy.sql import func
 
 class Generation(Base):
     __tablename__ = "generations"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     prompt = Column(Text, nullable=False)
-    layout_image_url = Column(Text, nullable=False)
-    sd_image_url = Column(Text, nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    image_url = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=False, default="pending")
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
     user = relationship("User", back_populates="generations")
     favourites = relationship("Favourite", back_populates="generation")
