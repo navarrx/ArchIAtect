@@ -1,17 +1,18 @@
+from sqlalchemy.orm import Session
 from app.ml.pipeline.floorplan_pipeline import FloorPlanGenerator
-from app.db.crud import save_generation_to_db
 from app.core.gcs import upload_to_gcs
+from app.db import crud
 from app.schemas.generation import GenerationResponse
 import logging
 
 logger = logging.getLogger(__name__)
 generator = FloorPlanGenerator(use_stable_diffusion=True)
 
-async def generate(prompt: str) -> GenerationResponse:
+def generate_floorplan(db: Session, user_id: int, prompt: str) -> GenerationResponse:
     if not prompt or len(prompt.strip()) == 0:
         raise ValueError("Prompt cannot be empty")
 
-    logger.info(f"🚀 Generating floor plan for prompt: {prompt}")
+    logger.info(f"🚀 Generating floor plan for user {user_id} with prompt: {prompt}")
     result = generator.generate_from_prompt(prompt)
 
     # Subir imágenes a GCS
@@ -19,12 +20,25 @@ async def generate(prompt: str) -> GenerationResponse:
     sd_url = upload_to_gcs(result["output_files"].get("sd_image"))
 
     # Guardar en base de datos
-    generation_id = save_generation_to_db(prompt, layout_url, sd_url)
+    generation = crud.create_generation(db, user_id, prompt, layout_url, sd_url)
 
-    logger.info(f"✅ Floor plan generated and saved (id={generation_id})")
+    logger.info(f"✅ Floor plan generated and saved (id={generation.id})")
 
     return GenerationResponse(
         prompt=prompt,
         layout_image_url=layout_url,
         sd_image_url=sd_url
     )
+
+def get_all_floorplans(db: Session, page: int = 1, limit: int = 10):
+    skip = (page - 1) * limit
+    generations = db.query(crud.Generation).offset(skip).limit(limit).all()
+
+    return [
+        GenerationResponse(
+            prompt=g.prompt,
+            layout_image_url=g.layout_image_url,
+            sd_image_url=g.sd_image_url,
+        )
+        for g in generations
+    ]
