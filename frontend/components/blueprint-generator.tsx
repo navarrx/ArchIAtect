@@ -1,8 +1,7 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
+import axios from "axios"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,38 +13,79 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import BlueprintDisplay from "@/components/blueprint-display"
 import BlueprintGallery from "@/components/blueprint-gallery"
-import { fetchAPI } from "@/lib/api"
 
 export default function BlueprintGenerator() {
   const [loading, setLoading] = useState(false)
   const [blueprint, setBlueprint] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const handleGenerate = async (prompt: string) => {
     setLoading(true)
     setError(null)
 
-    const formData = new FormData(event.currentTarget)
-
     try {
-      const data = await fetchAPI("generate-blueprint", {
-        method: "POST",
-        body: JSON.stringify({
-          roomType: formData.get("roomType"),
-          squareMeters: formData.get("squareMeters"),
-          style: formData.get("style"),
-          additionalRequirements: formData.get("additionalRequirements"),
-          complexity: formData.get("complexity"),
-        }),
+      // const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/generate`, { ESTO PARA SPRINT 2
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/generate/test`, {
+        prompt,
       })
 
-      setBlueprint(data.blueprint_url) // Adjust based on your API response
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred")
+      setBlueprint(response.data.layout_image_url)
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError("An unknown error occurred")
+      }
     } finally {
       setLoading(false)
     }
+  }
+
+  // 🟢 Handler para formulario "With Parameters"
+  const handleParametersSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+
+    // 🟢 Armamos el prompt solo con cantidades
+    let promptParts = []
+
+    const rooms = [
+      { name: "bedroom", label: "bedroom" },
+      { name: "bathroom", label: "bathroom" },
+      { name: "kitchen", label: "kitchen" },
+      { name: "livingRoom", label: "living room" },
+      { name: "diningRoom", label: "dining room" },
+      { name: "garage", label: "garage" },
+      { name: "laundryRoom", label: "laundry room" },
+    ]
+
+    rooms.forEach(({ name, label }) => {
+      const count = Number(formData.get(name))
+      if (count > 0) {
+        promptParts.push(`${count} ${label}${count > 1 ? "s" : ""}`)
+      }
+    })
+
+    // 🟣 Entryway como opcional
+    if (formData.get("entryway")) {
+      promptParts.push("1 entryway")
+    }
+
+    const prompt = `I need a house with ${promptParts.join(", ")}.`
+
+    handleGenerate(prompt)
+  }
+
+
+  // 🟣 Handler para formulario "With Text"
+  const handleTextSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+    const prompt = formData.get("prompt") as string
+
+    handleGenerate(prompt)
   }
 
   return (
@@ -58,80 +98,90 @@ export default function BlueprintGenerator() {
       <TabsContent value="generator" className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card>
-            <CardContent className="pt-6">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="space-y-2">
-                  <Label htmlFor="roomType">Room Type</Label>
-                  <Select name="roomType" defaultValue="living-room">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select room type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="living-room">Living Room</SelectItem>
-                      <SelectItem value="kitchen">Kitchen</SelectItem>
-                      <SelectItem value="bedroom">Bedroom</SelectItem>
-                      <SelectItem value="bathroom">Bathroom</SelectItem>
-                      <SelectItem value="office">Office</SelectItem>
-                      <SelectItem value="full-house">Full House</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+            <CardContent className="pt-6 space-y-6">
 
-                <div className="space-y-2">
-                  <Label htmlFor="squareMeters">Size (m²)</Label>
-                  <Input type="number" name="squareMeters" defaultValue="50" min="10" max="500" />
-                </div>
+              {/* 🔥 Nueva Tabs interna: Parameters vs Text */}
+              <Tabs defaultValue="parameters" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="parameters">With Parameters</TabsTrigger>
+                  <TabsTrigger value="text">With Text</TabsTrigger>
+                </TabsList>
 
-                <div className="space-y-2">
-                  <Label htmlFor="style">Architectural Style</Label>
-                  <Select name="style" defaultValue="modern">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="modern">Modern</SelectItem>
-                      <SelectItem value="minimalist">Minimalist</SelectItem>
-                      <SelectItem value="traditional">Traditional</SelectItem>
-                      <SelectItem value="industrial">Industrial</SelectItem>
-                      <SelectItem value="scandinavian">Scandinavian</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {/* 🟢 With Parameters */}
+                <TabsContent value="parameters">
+                  <form onSubmit={handleParametersSubmit} className="space-y-6">
 
-                <div className="space-y-2">
-                  <Label htmlFor="complexity">Complexity</Label>
-                  <div className="pt-2">
-                    <Slider name="complexity" defaultValue={[50]} max={100} step={1} />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>Simple</span>
-                      <span>Complex</span>
+                    {/* Campos para cantidades de habitaciones */}
+                    {[
+                      { name: "bedroom", label: "Bedroom" },
+                      { name: "bathroom", label: "Bathroom" },
+                      { name: "kitchen", label: "Kitchen" },
+                      { name: "livingRoom", label: "Living Room" },
+                      { name: "diningRoom", label: "Dining Room" },
+                      { name: "garage", label: "Garage" },
+                      { name: "laundryRoom", label: "Laundry Room" },
+                    ].map(({ name, label }) => (
+                      <div key={name} className="flex items-center justify-between">
+                        <Label htmlFor={name} className="mr-4">{label}</Label>
+                        <Input
+                          type="number"
+                          name={name}
+                          id={name}
+                          defaultValue={name === "garage" || name === "laundryRoom" ? "0" : "1"}
+                          min="0"
+                          className="w-20"
+                        />
+                      </div>
+                    ))}
+
+                    {/* Checkbox para Entryway */}
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="entryway" className="mr-2 flex-shrink-0">Include Entryway</Label>
+                      <Input type="checkbox" name="entryway" id="entryway" className="h-5 w-5" />
                     </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="additionalRequirements">Additional Requirements</Label>
-                  <Textarea
-                    name="additionalRequirements"
-                    placeholder="E.g., large windows, open kitchen, etc."
-                    className="resize-none"
-                    rows={3}
-                  />
-                </div>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        "Generate Blueprint"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
 
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    "Generate Blueprint"
-                  )}
-                </Button>
+                {/* 🟣 With Text */}
+                <TabsContent value="text">
+                  <form onSubmit={handleTextSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt">Describe your floor plan</Label>
+                      <Textarea
+                        name="prompt"
+                        placeholder="Example: I need a modern home with 3 bedrooms, 2 bathrooms, a large kitchen and a garage."
+                        className="resize-none"
+                        rows={5}
+                        required
+                      />
+                    </div>
 
-                {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-              </form>
+                    <Button type="submit" className="w-full" disabled={loading}>
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        "Generate"
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+
+              {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
             </CardContent>
           </Card>
 
