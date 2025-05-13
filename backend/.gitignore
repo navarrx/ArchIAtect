@@ -48,3 +48,6 @@ uploads/
 # Alembic
 alembic/versions/*
 !alembic/versions/.gitkeep
+
+# Secrets folder
+secrets/
