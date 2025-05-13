@@ -19,9 +19,7 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const pathname = usePathname()
 
-  // Check authentication status on component mount
   useEffect(() => {
-    // This is a placeholder. Replace with your actual auth check logic
     const checkAuth = () => {
       const token = localStorage.getItem("authToken")
       setIsLoggedIn(!!token)
@@ -31,17 +29,17 @@ export default function Navbar() {
   }, [])
 
   const handleLogout = () => {
-    // This is a placeholder. Replace with your actual logout logic
     localStorage.removeItem("authToken")
+    localStorage.removeItem("blueprintData")
+    localStorage.removeItem("userData")
     setIsLoggedIn(false)
-    // Redirect to login page
     window.location.href = "/login"
   }
 
   const navItems = [
     { name: "Inicio", href: "/" },
     { name: "Generador", href: "/generator" },
-    { name: "Galería", href: "/gallery" },
+    { name: "Descubrir", href: "/discover" }, // Renombrado de "Galería" a "Descubrir"
   ]
 
   return (
@@ -49,7 +47,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 md:px-6 py-4">
         <div className="flex justify-between items-center">
           <Link href="/" className="font-bold text-xl">
-            ArquiAI
+            ArchIAtect
           </Link>
 
           {/* Desktop Navigation */}
