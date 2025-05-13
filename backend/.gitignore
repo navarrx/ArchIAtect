@@ -51,3 +51,6 @@ alembic/versions/*
 
 # Secrets folder
 secrets/
+
+#image output folder (review)
+output/
