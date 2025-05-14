@@ -757,7 +757,7 @@ class LayoutGenerationModule:
         ax.axis('off')
 
         if show_labels:
-            plt.title("Generated Floor Plan", fontsize=12, fontweight='bold')
+            pass
         else:
             pass
 
