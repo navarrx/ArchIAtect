@@ -16,25 +16,35 @@ import BlueprintGallery from "@/components/blueprint-gallery"
 
 export default function BlueprintGenerator() {
   const [loading, setLoading] = useState(false)
-  const [blueprint, setBlueprint] = useState<string | null>(null)
+  const [layoutImage, setLayoutImage] = useState<string | null>(null)
+  const [sdImage, setSdImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleGenerate = async (prompt: string) => {
     setLoading(true)
     setError(null)
+    setLayoutImage(null)
+    setSdImage(null)
 
     try {
-      // const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/generate`, { ESTO PARA SPRINT 2
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/generate/test`, {
         prompt,
       })
 
-      setBlueprint(response.data.layout_image_url)
+      console.log("Response from backend:", response.data)
+      
+      if (!response.data.layout_image_url) {
+        throw new Error("No layout image URL received from server")
+      }
+
+      setLayoutImage(response.data.layout_image_url)
+      setSdImage(response.data.sd_image_url || null)
     } catch (err: any) {
+      console.error("Error generating blueprint:", err)
       if (err.response && err.response.data && err.response.data.detail) {
         setError(err.response.data.detail)
       } else {
-        setError("An unknown error occurred")
+        setError(err.message || "An unknown error occurred")
       }
     } finally {
       setLoading(false)
@@ -63,7 +73,7 @@ export default function BlueprintGenerator() {
     rooms.forEach(({ name, label }) => {
       const count = Number(formData.get(name))
       if (count > 0) {
-        promptParts.push(`${count} ${label}${count > 1 ? "s" : ""}`)
+        promptParts.push(`${count} ${label}`)
       }
     })
 
@@ -76,7 +86,6 @@ export default function BlueprintGenerator() {
 
     handleGenerate(prompt)
   }
-
 
   // 🟣 Handler para formulario "With Text"
   const handleTextSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -99,7 +108,6 @@ export default function BlueprintGenerator() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Card>
             <CardContent className="pt-6 space-y-6">
-
               {/* 🔥 Nueva Tabs interna: Parameters vs Text */}
               <Tabs defaultValue="parameters" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
@@ -110,7 +118,6 @@ export default function BlueprintGenerator() {
                 {/* 🟢 With Parameters */}
                 <TabsContent value="parameters">
                   <form onSubmit={handleParametersSubmit} className="space-y-6">
-
                     {/* Campos para cantidades de habitaciones */}
                     {[
                       { name: "bedroom", label: "Bedroom" },
@@ -137,7 +144,12 @@ export default function BlueprintGenerator() {
                     {/* Checkbox para Entryway */}
                     <div className="flex items-center justify-between">
                       <Label htmlFor="entryway" className="mr-2 flex-shrink-0">Include Entryway</Label>
-                      <Input type="checkbox" name="entryway" id="entryway" className="h-5 w-5" />
+                      <input 
+                        type="checkbox" 
+                        name="entryway" 
+                        id="entryway" 
+                        className="h-5 w-5"
+                      />
                     </div>
 
                     <Button type="submit" className="w-full" disabled={loading}>
@@ -147,7 +159,7 @@ export default function BlueprintGenerator() {
                           Generating...
                         </>
                       ) : (
-                        "Generate Blueprint"
+                        "Generate Floorplan"
                       )}
                     </Button>
                   </form>
@@ -185,7 +197,11 @@ export default function BlueprintGenerator() {
             </CardContent>
           </Card>
 
-          <BlueprintDisplay blueprint={blueprint} loading={loading} />
+          <BlueprintDisplay 
+            layoutImage={layoutImage} 
+            sdImage={sdImage} 
+            loading={loading} 
+          />
         </div>
       </TabsContent>
 

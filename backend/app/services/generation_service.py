@@ -17,17 +17,23 @@ def generate_floorplan(db: Session, user_id: int, prompt: str) -> GenerationResp
 
     # Subir imágenes a GCS
     layout_url = upload_to_gcs(result["output_files"]["visualization"])
-    sd_url = upload_to_gcs(result["output_files"].get("sd_image"))
+    sd_url = None
+    if "sd_image" in result["output_files"]:
+        sd_url = upload_to_gcs(result["output_files"]["sd_image"])
 
     # Guardar en base de datos
-    generation = crud.create_generation(db, user_id, prompt, layout_url, sd_url)
+    generation = crud.save_generation_to_db(db, user_id, prompt, layout_url, sd_url)
 
     logger.info(f"✅ Floor plan generated and saved (id={generation.id})")
 
     return GenerationResponse(
+        id=generation.id,
         prompt=prompt,
         layout_image_url=layout_url,
-        sd_image_url=sd_url
+        sd_image_url=sd_url,
+        created_at=generation.created_at,
+        status=generation.status,
+        error_message=generation.error_message
     )
 
 def get_all_floorplans(db: Session, page: int = 1, limit: int = 10):
@@ -36,9 +42,13 @@ def get_all_floorplans(db: Session, page: int = 1, limit: int = 10):
 
     return [
         GenerationResponse(
+            id=g.id,
             prompt=g.prompt,
             layout_image_url=g.layout_image_url,
             sd_image_url=g.sd_image_url,
+            created_at=g.created_at,
+            status=g.status,
+            error_message=g.error_message
         )
         for g in generations
     ]
