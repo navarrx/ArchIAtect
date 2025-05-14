@@ -46,11 +46,11 @@ def upload_to_gcs(local_file_path: str, folder: str = "generated") -> str:
         # Nombre único en GCS
         filename = f"{folder}/{uuid.uuid4().hex}_{os.path.basename(local_file_path)}"
         blob = bucket.blob(filename)
+        
+        # Subir el archivo
         blob.upload_from_filename(local_file_path)
-
-        # Hacer público
-        blob.make_public()
-
-        return blob.public_url
+        
+        # Con uniform bucket-level access, la URL pública se construye directamente
+        return f"https://storage.googleapis.com/{bucket_name}/{filename}"
     except Exception as e:
         raise Exception(f"Failed to upload file to GCS: {str(e)}")

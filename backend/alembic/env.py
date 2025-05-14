@@ -27,23 +27,16 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 from app.models.base import Base
 from app.models.user import User
-from app.models.floor_plan import FloorPlan
-from app.models.reference_image import ReferenceImage, FloorPlanReferenceImage
-from app.models.user_preference import UserPreference
+from app.models.generation import Generation
+from app.models.favourite import Favourite
 
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 # Set up database URL from environment variables
 config.set_main_option("sqlalchemy.url", 
     f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@{os.getenv('POSTGRES_SERVER')}/{os.getenv('POSTGRES_DB')}")
 
-
-def run_migrations_offline():
+def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
@@ -67,7 +60,7 @@ def run_migrations_offline():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -75,7 +68,7 @@ def run_migrations_online():
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
+        config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
