@@ -16,7 +16,8 @@ class GenerationRequest(BaseModel):
 class GenerationResponse(BaseModel):
     id: int = Field(..., description="Unique identifier for the generation")
     prompt: str = Field(..., description="The prompt used for generation")
-    image_url: str = Field(..., description="URL to the generated image in GCS")
+    layout_image_url: str = Field(..., description="URL to the layout image in GCS")
+    sd_image_url: Optional[str] = Field(None, description="URL to the SD image in GCS")
     created_at: datetime = Field(..., description="When the generation was created")
     status: str = Field(..., description="Status of the generation (success/failed)")
     error_message: Optional[str] = Field(None, description="Error message if generation failed")
