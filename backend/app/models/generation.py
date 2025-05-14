@@ -7,8 +7,9 @@ class Generation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     prompt = Column(Text, nullable=False)
-    image_url = Column(String(255), nullable=True)
-    status = Column(String(50), nullable=False, default="pending")
+    layout_image_url = Column(String(255), nullable=False)
+    sd_image_url = Column(String(255), nullable=True)
+    status = Column(String(50), nullable=False, default="success")
     error_message = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
