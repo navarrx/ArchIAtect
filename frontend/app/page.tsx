@@ -23,6 +23,7 @@ interface UserStats {
   favorite_blueprints: Blueprint[]
   recent_count: number
   success_rate: number
+  favorites_count: number
 }
 
 // Componente para usuarios NO logueados
@@ -70,7 +71,7 @@ function GuestHome() {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-            Genera planos arquitectónicos profesionales en segundos. 
+            Genera bocetos de planos arquitectónicos en segundos. 
             <span className="text-foreground font-medium"> Diseño inteligente.</span>
           </p>
           
@@ -341,6 +342,7 @@ function AuthenticatedHome() {
         const token = localStorage.getItem('authToken')
         if (!token) return
 
+        // Obtener estadísticas del usuario
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/floorplans/stats/user`, {
           headers: { Authorization: `Bearer ${token}` }
         })
@@ -349,12 +351,24 @@ function AuthenticatedHome() {
         
         console.log('User stats from backend:', userStats)
 
+        // Obtener contador de favoritos
+        let favoritesCount = 0
+        try {
+          const favoritesResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/favourites/my/basic`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          favoritesCount = favoritesResponse.data.length
+        } catch (favoritesError) {
+          console.error('Error fetching favorites count:', favoritesError)
+        }
+
         setStats({
           total_blueprints: userStats.total_blueprints,
           recent_blueprints: userStats.recent_blueprints || [],
           favorite_blueprints: userStats.recent_blueprints?.slice(0, 2) || [], // Simulando favoritos
           recent_count: userStats.recent_count,
-          success_rate: userStats.success_rate
+          success_rate: userStats.success_rate,
+          favorites_count: favoritesCount
         })
         
         // Inicializar estado de loading para las imágenes
@@ -477,17 +491,19 @@ function AuthenticatedHome() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Favoritos</CardTitle>
-                <Star className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stats?.favorite_blueprints?.length || 0}</div>
-                <p className="text-xs text-muted-foreground">
-                  Guardados
-                </p>
-              </CardContent>
+            <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" asChild>
+              <Link href="/favourites">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Favoritos</CardTitle>
+                  <Star className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats?.favorites_count || 0}</div>
+                  <p className="text-xs text-muted-foreground">
+                    Guardados
+                  </p>
+                </CardContent>
+              </Link>
             </Card>
 
             <Card>
@@ -561,11 +577,6 @@ function AuthenticatedHome() {
                       {new Date(blueprint.created_at).toLocaleDateString()}
                     </p>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/generator?prompt=${encodeURIComponent(blueprint.prompt)}`}>
-                          Regenerar
-                        </Link>
-                      </Button>
                       <Button 
                         size="sm" 
                         variant="outline" 
@@ -607,7 +618,7 @@ function AuthenticatedHome() {
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Crear Nuevo Plano</h3>
                   <p className="text-muted-foreground">
-                    Genera un plano arquitectónico personalizado con IA
+                    Genera un boceto de plano arquitectónico personalizado con IA
                   </p>
                 </CardContent>
               </Link>
