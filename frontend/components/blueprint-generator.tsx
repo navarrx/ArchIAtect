@@ -13,8 +13,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import BlueprintDisplay from "@/components/blueprint-display"
 import BlueprintGallery from "@/components/blueprint-gallery"
-import { useAuth } from "@/hooks/useAuth.tsx"
+import { useAuth } from "@/hooks/useAuth"
 import Link from "next/link"
+import { Building2 } from "lucide-react"
 
 export default function BlueprintGenerator() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -106,132 +107,166 @@ export default function BlueprintGenerator() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-[600px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Verificando autenticación...</p>
+        </div>
       </div>
     )
   }
 
   if (!isAuthenticated) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
-        <CardContent className="pt-6 space-y-6">
-          <div className="text-center space-y-4">
-            <h2 className="text-2xl font-bold">Inicia sesión para generar planos</h2>
-            <p className="text-muted-foreground">
+      <div className="max-w-2xl mx-auto">
+        <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+          <CardContent className="pt-12 pb-12 px-8 text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Building2 className="w-8 h-8 text-primary" />
+            </div>
+            <h2 className="text-2xl font-bold mb-4">Inicia sesión para generar planos</h2>
+            <p className="text-muted-foreground mb-8 max-w-md mx-auto">
               Necesitas iniciar sesión para poder generar planos arquitectónicos con nuestra IA.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button asChild>
+              <Button asChild className="rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
                 <Link href="/login">Iniciar Sesión</Link>
               </Button>
-              <Button variant="outline" asChild>
+              <Button variant="outline" asChild className="rounded-xl border-border/50 hover:bg-muted/50">
                 <Link href="/register">Registrarse</Link>
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
   return (
     <Tabs defaultValue="generator" className="w-full">
-      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-8">
-        <TabsTrigger value="generator">Generator</TabsTrigger>
-        <TabsTrigger value="gallery">Gallery</TabsTrigger>
+      <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-muted/30 p-1 rounded-2xl mb-12">
+        <TabsTrigger value="generator" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          Generador
+        </TabsTrigger>
+        <TabsTrigger value="gallery" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+          Galería
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="generator" className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card>
-            <CardContent className="pt-6 space-y-6">
-              {/* 🔥 Nueva Tabs interna: Parameters vs Text */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <CardContent className="pt-8 pb-8 px-8">
+              {/* Tabs interna: Parameters vs Text */}
               <Tabs defaultValue="parameters" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="parameters">With Parameters</TabsTrigger>
-                  <TabsTrigger value="text">With Text</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 bg-muted/30 p-1 rounded-2xl mb-6">
+                  <TabsTrigger value="parameters" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    Con Parámetros
+                  </TabsTrigger>
+                  <TabsTrigger value="text" className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                    Con Texto
+                  </TabsTrigger>
                 </TabsList>
 
-                {/* 🟢 With Parameters */}
+                {/* With Parameters */}
                 <TabsContent value="parameters">
                   <form onSubmit={handleParametersSubmit} className="space-y-6">
-                    {/* Campos para cantidades de habitaciones */}
-                    {[
-                      { name: "bedroom", label: "Bedroom" },
-                      { name: "bathroom", label: "Bathroom" },
-                      { name: "kitchen", label: "Kitchen" },
-                      { name: "livingRoom", label: "Living Room" },
-                      { name: "diningRoom", label: "Dining Room" },
-                      { name: "garage", label: "Garage" },
-                      { name: "laundryRoom", label: "Laundry Room" },
-                    ].map(({ name, label }) => (
-                      <div key={name} className="flex items-center justify-between">
-                        <Label htmlFor={name} className="mr-4">{label}</Label>
-                        <Input
-                          type="number"
-                          name={name}
-                          id={name}
-                          defaultValue={name === "garage" || name === "laundryRoom" ? "0" : "1"}
-                          min="0"
-                          className="w-20"
-                        />
-                      </div>
-                    ))}
+                    <div className="space-y-4">
+                      {[
+                        { name: "bedroom", label: "Dormitorios", icon: "🛏️" },
+                        { name: "bathroom", label: "Baños", icon: "🚿" },
+                        { name: "kitchen", label: "Cocina", icon: "🍳", max: 1 },
+                        { name: "livingRoom", label: "Sala de Estar", icon: "🛋️", max: 1 },
+                        { name: "diningRoom", label: "Comedor", icon: "🍽️", max: 1 },
+                        { name: "garage", label: "Garaje", icon: "🚗", max: 1 },
+                        { name: "laundryRoom", label: "Lavandería", icon: "👕", max: 1 },
+                      ].map(({ name, label, icon, max }) => (
+                        <div key={name} className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+                          <div className="flex items-center space-x-3">
+                            <span className="text-lg">{icon}</span>
+                            <Label htmlFor={name} className="font-medium">{label}</Label>
+                          </div>
+                          <Input
+                            type="number"
+                            name={name}
+                            id={name}
+                            defaultValue={name === "garage" || name === "laundryRoom" ? "0" : "1"}
+                            min="0"
+                            max={max}
+                            className="w-20 border-0 bg-background/50 rounded-lg focus:bg-background focus:ring-2 focus:ring-primary/20"
+                          />
+                        </div>
+                      ))}
+                    </div>
 
                     {/* Checkbox para Entryway */}
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="entryway" className="mr-2 flex-shrink-0">Include Entryway</Label>
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/30 border border-border/50">
+                      <div className="flex items-center space-x-3">
+                        <span className="text-lg">🚪</span>
+                        <Label htmlFor="entryway" className="font-medium">Incluir Entrada</Label>
+                      </div>
                       <input 
                         type="checkbox" 
                         name="entryway" 
                         id="entryway" 
-                        className="h-5 w-5"
+                        className="h-5 w-5 rounded border-border/50 focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button 
+                      type="submit" 
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200" 
+                      disabled={loading}
+                    >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generating...
+                          Generando...
                         </>
                       ) : (
-                        "Generate Floorplan"
+                        "Generar Plano"
                       )}
                     </Button>
                   </form>
                 </TabsContent>
 
-                {/* 🟣 With Text */}
+                {/* With Text */}
                 <TabsContent value="text">
                   <form onSubmit={handleTextSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="prompt">Describe your floor plan</Label>
+                    <div className="space-y-3">
+                      <Label htmlFor="prompt" className="text-sm font-medium">Describe tu plano</Label>
                       <Textarea
                         name="prompt"
-                        placeholder="Example: I need a modern home with 3 bedrooms, 2 bathrooms, a large kitchen and a garage."
-                        className="resize-none"
+                        placeholder="Ejemplo: Necesito una casa moderna con 3 dormitorios, 2 baños, una cocina grande y un garaje."
+                        className="resize-none border-0 bg-muted/50 rounded-xl p-4 focus:bg-background focus:ring-2 focus:ring-primary/20"
                         rows={5}
                         required
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button 
+                      type="submit" 
+                      className="w-full py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200" 
+                      disabled={loading}
+                    >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Generating...
+                          Generando...
                         </>
                       ) : (
-                        "Generate"
+                        "Generar"
                       )}
                     </Button>
                   </form>
                 </TabsContent>
               </Tabs>
 
-              {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+              {error && (
+                <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
