@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Download, Loader2, Trash2, ChevronDown, Filter, Calendar } from "lucide-react"
+import { Download, Loader2, Trash2, ChevronDown, Filter, Calendar, Heart, Sparkles, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
+import FavouriteButton from "@/components/favourite-button"
 
 interface Blueprint {
   id: number
@@ -30,6 +31,7 @@ interface Blueprint {
   created_at: string
   status: string
   error_message: string | null
+  is_favourite?: boolean
 }
 
 export default function MyBlueprintsPage() {
@@ -122,10 +124,31 @@ export default function MyBlueprintsPage() {
       console.log("First blueprint date:", data?.[0]?.created_at)
       console.log("Last blueprint date:", data?.[data.length - 1]?.created_at)
       
+      // Verificar el estado de favoritos para cada plano
+      const blueprintsWithFavourites = await Promise.all(
+        data.map(async (blueprint: Blueprint) => {
+          try {
+            const favResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/favourites/check/${blueprint.id}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+            if (favResponse.ok) {
+              const favData = await favResponse.json()
+              return { ...blueprint, is_favourite: favData.is_favourite }
+            }
+            return { ...blueprint, is_favourite: false }
+          } catch (error) {
+            console.error(`Error checking favourite status for blueprint ${blueprint.id}:`, error)
+            return { ...blueprint, is_favourite: false }
+          }
+        })
+      )
+      
       if (reset) {
-        setBlueprints(data || [])
+        setBlueprints(blueprintsWithFavourites || [])
       } else {
-        setBlueprints(prev => [...prev, ...(data || [])])
+        setBlueprints(prev => [...prev, ...(blueprintsWithFavourites || [])])
       }
 
       // Si recibimos menos de 50 planos, no hay más páginas
@@ -171,6 +194,12 @@ export default function MyBlueprintsPage() {
         description: error instanceof Error ? error.message : "Ocurrió un error al eliminar el plano",
       })
     }
+  }
+
+  const handleFavouriteToggle = (blueprintId: number, isFavourite: boolean) => {
+    setBlueprints(prev => prev.map(bp => 
+      bp.id === blueprintId ? { ...bp, is_favourite: isFavourite } : bp
+    ))
   }
 
   const handleDownload = async (blueprint: Blueprint) => {
@@ -230,34 +259,70 @@ export default function MyBlueprintsPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Mis Planos</h1>
-          <p className="text-muted-foreground">
-            {filteredBlueprints.length} de {blueprints.length} planos mostrados
-          </p>
+    <div className="container mx-auto py-12 px-4 md:px-6 max-w-7xl">
+      {/* Header Section */}
+      <div className="text-center mb-12">
+        <div className="flex items-center justify-center mb-4">
+          <div className="relative">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Building2 className="h-8 w-8 text-white" />
+            </div>
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <Sparkles className="h-3 w-3 text-blue-500" />
+            </div>
+          </div>
         </div>
-        <Button asChild className="mt-4 md:mt-0">
-          <Link href="/generator">Crear Nuevo Plano</Link>
-        </Button>
+        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          Mis Planos
+        </h1>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          Tu colección personal de diseños arquitectónicos. Aquí encontrarás todos los planos que has generado con ArchIAtect.
+        </p>
       </div>
 
-      {/* Filtros y búsqueda */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div>
-          <Label htmlFor="search">Buscar planos</Label>
-          <Input
-            id="search"
-            placeholder="Buscar por descripción..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* Stats and Actions */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+        <div className="text-center md:text-left mb-4 md:mb-0">
+          <div className="text-2xl font-bold text-gray-900">{filteredBlueprints.length}</div>
+          <div className="text-sm text-muted-foreground">
+            {filteredBlueprints.length === 1 ? 'plano' : 'planos'} mostrados
+          </div>
         </div>
-        <div>
-          <Label htmlFor="sort">Ordenar por</Label>
+        <div className="flex gap-3">
+          <Button variant="outline" asChild className="rounded-xl">
+            <Link href="/favourites">
+              <Heart className="mr-2 h-4 w-4" />
+              Mis Favoritos
+            </Link>
+          </Button>
+          <Button asChild className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+            <Link href="/generator">
+              <Sparkles className="mr-2 h-4 w-4" />
+              Crear Nuevo Plano
+            </Link>
+          </Button>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="space-y-2">
+          <Label htmlFor="search" className="text-sm font-medium text-gray-700">Buscar planos</Label>
+          <div className="relative">
+            <Input
+              id="search"
+              placeholder="Buscar por descripción..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+            />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sort" className="text-sm font-medium text-gray-700">Ordenar por</Label>
           <Select value={sortOrder} onValueChange={handleSortChange}>
-            <SelectTrigger id="sort">
+            <SelectTrigger id="sort" className="rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500">
               <SelectValue placeholder="Ordenar por" />
             </SelectTrigger>
             <SelectContent>
@@ -269,26 +334,48 @@ export default function MyBlueprintsPage() {
       </div>
 
       {error && (
-        <div className="bg-destructive/10 text-destructive p-4 rounded-lg mb-6">
-          <p>{error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6">
+          <p className="flex items-center">
+            <AlertCircle className="mr-2 h-4 w-4" />
+            {error}
+          </p>
         </div>
       )}
 
       {filteredBlueprints.length === 0 ? (
-        <div className="text-center py-16">
+        <div className="text-center py-20">
           {blueprints.length === 0 ? (
             <>
-              <p className="text-muted-foreground mb-6">Aún no has generado ningún plano</p>
-              <Button asChild>
-                <Link href="/generator">Crear Mi Primer Plano</Link>
+              <div className="mb-8">
+                <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Building2 className="h-12 w-12 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Aún no has generado ningún plano</h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  Comienza a crear tus primeros diseños arquitectónicos con ArchIAtect.
+                </p>
+              </div>
+              <Button asChild className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                <Link href="/generator">
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Crear Mi Primer Plano
+                </Link>
               </Button>
             </>
           ) : (
             <>
-              <p className="text-muted-foreground mb-6">No se encontraron planos con los filtros aplicados</p>
-              <Button variant="outline" onClick={() => {
-                setSearchTerm("")
-              }}>
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Filter className="h-8 w-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No se encontraron planos</h3>
+                <p className="text-gray-600">No hay planos que coincidan con los filtros aplicados.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => setSearchTerm("")}
+                className="rounded-xl"
+              >
                 Limpiar Filtros
               </Button>
             </>
@@ -296,20 +383,20 @@ export default function MyBlueprintsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBlueprints.map((blueprint, index) => (
               <Card 
                 key={blueprint.id} 
-                className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300"
+                className="group overflow-hidden rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white"
                 ref={index === filteredBlueprints.length - 1 ? lastBlueprintElementRef : null}
               >
                 <CardContent className="p-0">
-                  <div className="aspect-[4/3] bg-gradient-to-br from-muted to-muted/50 relative overflow-hidden">
+                  <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
                     {blueprint.sd_image_url || blueprint.layout_image_url ? (
                       <img
                         src={blueprint.sd_image_url || blueprint.layout_image_url}
                         alt={blueprint.prompt}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -321,17 +408,28 @@ export default function MyBlueprintsPage() {
                       blueprint.sd_image_url || blueprint.layout_image_url ? 'hidden' : ''
                     }`}>
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-muted-foreground/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                          <Calendar className="w-8 h-8 text-muted-foreground/40" />
+                        <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Calendar className="w-8 h-8 text-gray-400" />
                         </div>
-                        <p className="text-xs text-muted-foreground">Sin imagen</p>
+                        <p className="text-sm text-gray-500">Sin imagen</p>
                       </div>
                     </div>
-                    <div className="absolute top-2 right-2">
-                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        blueprint.status === 'success' ? 'bg-green-100 text-green-800' :
-                        blueprint.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-red-100 text-red-800'
+                    
+                    {/* Badge de favorito */}
+                    {blueprint.is_favourite && (
+                      <div className="absolute top-3 left-3">
+                        <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white p-2 rounded-full shadow-lg">
+                          <Heart className="h-4 w-4" />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Badge de estado */}
+                    <div className="absolute top-3 right-3">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+                        blueprint.status === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+                        blueprint.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
+                        'bg-red-100 text-red-800 border border-red-200'
                       }`}>
                         {blueprint.status === 'success' ? 'Exitoso' :
                          blueprint.status === 'pending' ? 'Pendiente' :
@@ -339,48 +437,58 @@ export default function MyBlueprintsPage() {
                       </span>
                     </div>
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-medium mb-1 line-clamp-2">{blueprint.prompt}</h3>
-                    <p className="text-xs text-muted-foreground mb-4">
+                  <div className="p-6">
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
+                      {blueprint.prompt}
+                    </h3>
+                    <p className="text-sm text-gray-500 mb-4 flex items-center">
+                      <Calendar className="mr-1 h-3 w-3" />
                       Creado el {new Date(blueprint.created_at).toLocaleDateString()}
                     </p>
-                    <div className="flex justify-between">
-                      <div className="flex gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          onClick={() => handleDownload(blueprint)}
-                          disabled={!blueprint.sd_image_url && !blueprint.layout_image_url}
-                        >
-                          <Download className="h-4 w-4" />
-                          <span className="sr-only">Descargar</span>
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="icon" className="text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Eliminar</span>
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta acción no se puede deshacer. El plano será eliminado permanentemente.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(blueprint.id.toString())}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDownload(blueprint)}
+                        disabled={!blueprint.sd_image_url && !blueprint.layout_image_url}
+                        className="flex-1 rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Descargar
+                      </Button>
+                      <FavouriteButton
+                        generationId={blueprint.id}
+                        isFavourite={blueprint.is_favourite || false}
+                        onToggle={(isFavourite) => handleFavouriteToggle(blueprint.id, isFavourite)}
+                      />
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="rounded-2xl">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-lg">¿Estás seguro?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-600">
+                              Esta acción no se puede deshacer. El plano será eliminado permanentemente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(blueprint.id.toString())}
+                              className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
+                            >
+                              Eliminar
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </CardContent>
