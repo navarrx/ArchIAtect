@@ -36,6 +36,11 @@ class Settings(BaseSettings):
     FIRST_SUPERUSER: Optional[str] = None
     FIRST_SUPERUSER_PASSWORD: Optional[str] = None
 
+    # Google OAuth settings
+    GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str = "http://localhost:3000/auth/google/callback"
+
     class Config:
         env_file = ".env"
 

@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 # Import our modules
 from ..modules.text_module import TextUnderstandingModule
 from ..modules.layout_module import LayoutGenerationModule
-from ..modules.sd_controlnet_module import StableDiffusionControlNetModule  # ✅ Usamos tu módulo corregido
+from ..modules.sd_controlnet_module import StableDiffusionControlNetModule
 
 
 class FloorPlanGenerator:

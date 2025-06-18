@@ -1,5 +1,5 @@
 # backend/app/services/user_service.py
-from typing import Optional
+from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 from app.core.exceptions import UserNotFoundError, InvalidCredentialsError
@@ -26,24 +26,25 @@ class UserService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_user(self, user_in: UserCreate) -> UserResponse:
+    async def create_user(self, user_data: Dict[str, Any]) -> UserResponse:
         """
         Create a new user.
         """
         try:
             # Check if user exists
-            user = self.db.query(User).filter(User.email == user_in.email).first()
+            user = self.db.query(User).filter(User.email == user_data["email"]).first()
             if user:
                 raise ValueError("User with this email already exists")
 
             # Create new user
-            password_hash = get_password_hash(user_in.password) if user_in.password else None
             db_user = User(
-                email=user_in.email,
-                name=user_in.name,
-                profile_picture_url=user_in.profile_picture_url,
-                password_hash=password_hash,
-                google_id=user_in.google_id
+                email=user_data["email"],
+                first_name=user_data.get("first_name"),
+                last_name=user_data.get("last_name"),
+                profile_picture_url=user_data.get("profile_picture_url"),
+                password_hash=user_data.get("password_hash"),
+                google_id=user_data.get("google_id"),
+                is_active=user_data.get("is_active", True)
             )
             self.db.add(db_user)
             self.db.commit()
@@ -78,21 +79,23 @@ class UserService:
 
     async def update_user(self, user_id: int, user_in: UserUpdate) -> UserResponse:
         """
-        Update user.
+        Update user information.
         """
         try:
             user = self.db.query(User).filter(User.id == user_id).first()
             if not user:
                 raise UserNotFoundError()
 
-            update_data = user_in.model_dump(exclude_unset=True)
-            if "password" in update_data:
-                update_data["password_hash"] = get_password_hash(update_data.pop("password"))
+            # Update password if provided
+            if user_in.password:
+                user.password_hash = get_password_hash(user_in.password)
 
+            # Update other fields if provided
+            update_data = user_in.dict(exclude_unset=True, exclude={'password'})
             for field, value in update_data.items():
-                setattr(user, field, value)
+                if value is not None:  # Only update if value is provided
+                    setattr(user, field, value)
 
-            self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
             return UserResponse.model_validate(user)

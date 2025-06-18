@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Menu, X, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,33 +13,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/hooks/useAuth.tsx"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const { user, isAuthenticated, logout } = useAuth()
   const pathname = usePathname()
 
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("authToken")
-      setIsLoggedIn(!!token)
-    }
-
-    checkAuth()
-  }, [])
-
   const handleLogout = () => {
-    localStorage.removeItem("authToken")
-    localStorage.removeItem("blueprintData")
-    localStorage.removeItem("userData")
-    setIsLoggedIn(false)
+    logout()
     window.location.href = "/login"
   }
 
   const navItems = [
     { name: "Inicio", href: "/" },
     { name: "Generador", href: "/generator" },
-    { name: "Descubrir", href: "/discover" }, // Renombrado de "Galería" a "Descubrir"
+    { name: "Descubrir", href: "/discover" },
+    ...(user?.is_superuser ? [{ name: "Dashboard", href: "/dashboard" }] : []),
   ]
 
   return (
@@ -67,13 +57,13 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center space-x-2">
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
                       <Avatar className="h-8 w-8">
                         <AvatarFallback>
-                          <User className="h-4 w-4" />
+                          {user?.name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || <User className="h-4 w-4" />}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -128,7 +118,7 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {isLoggedIn ? (
+              {isAuthenticated ? (
                 <>
                   <Link
                     href="/profile"

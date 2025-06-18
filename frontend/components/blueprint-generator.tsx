@@ -13,21 +13,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import BlueprintDisplay from "@/components/blueprint-display"
 import BlueprintGallery from "@/components/blueprint-gallery"
+import { useAuth } from "@/hooks/useAuth.tsx"
+import Link from "next/link"
 
 export default function BlueprintGenerator() {
+  const { isAuthenticated, isLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [layoutImage, setLayoutImage] = useState<string | null>(null)
   const [sdImage, setSdImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const handleGenerate = async (prompt: string) => {
+    if (!isAuthenticated) {
+      return
+    }
+
     setLoading(true)
     setError(null)
     setLayoutImage(null)
     setSdImage(null)
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/generate/test`, {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/generate`, {
         prompt,
       })
 
@@ -95,6 +102,37 @@ export default function BlueprintGenerator() {
     const prompt = formData.get("prompt") as string
 
     handleGenerate(prompt)
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[600px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Card className="w-full max-w-2xl mx-auto">
+        <CardContent className="pt-6 space-y-6">
+          <div className="text-center space-y-4">
+            <h2 className="text-2xl font-bold">Inicia sesión para generar planos</h2>
+            <p className="text-muted-foreground">
+              Necesitas iniciar sesión para poder generar planos arquitectónicos con nuestra IA.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button asChild>
+                <Link href="/login">Iniciar Sesión</Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href="/register">Registrarse</Link>
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (

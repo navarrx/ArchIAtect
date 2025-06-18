@@ -3,9 +3,11 @@ from typing import Optional
 from datetime import datetime
 
 class UserBase(BaseModel):
-    email: EmailStr = Field(..., description="Email del usuario")
-    name: Optional[str] = Field(None, description="Nombre del usuario")
-    profile_picture_url: Optional[str] = Field(None, description="URL de la foto de perfil")
+    email: EmailStr
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    profile_picture_url: Optional[str] = None
+    google_id: Optional[str] = None
 
     class Config:
         json_schema_extra = {
@@ -17,11 +19,11 @@ class UserBase(BaseModel):
         }
 
 class UserCreate(UserBase):
-    password: Optional[str] = Field(None, description="Contraseña del usuario")
-    google_id: Optional[str] = Field(None, description="ID de Google si se registra con Google")
+    password: Optional[str] = None
 
 class UserUpdate(UserBase):
-    password: Optional[str] = Field(None, description="Nueva contraseña")
+    email: Optional[str] = None
+    password: Optional[str] = None
 
 class UserInDB(UserBase):
     id: int = Field(..., description="ID único del usuario")

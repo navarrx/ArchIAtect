@@ -3,33 +3,33 @@ import spacy
 from typing import Dict, List, Optional, Tuple, Any
 import json
 
-# Load spaCy model for NLP tasks
+# Cargar modelo spaCy para NLP
 try:
     nlp = spacy.load("en_core_web_sm")
 except:
-    print("Installing spaCy model...")
+    print("Instalando modelo de spaCy...")
     import os
     os.system("python -m spacy download en_core_web_sm")
     nlp = spacy.load("en_core_web_sm")
 
 class TextUnderstandingModule:
     def __init__(self):
-        # Common room types to look for in prompts
+        # Tipos de habitaciones comunes a buscar en los prompts
         self.room_types = [
             "bedroom", "bathroom", "kitchen", "living room", "dining room", 
             "garage", "laundry room", "entryway"
         ]
         
-        # Size descriptors and their approximate square footage
+        # Descriptores de tamaño y sus pies cuadrados aproximados
         self.size_descriptors = {
-            "small": 0.7,  # 70% of standard size
-            "medium": 1.0,  # standard size
-            "large": 1.3,   # 130% of standard size
+            "small": 0.7,  # 70% del tamaño estándar
+            "medium": 1.0,  # tamaño estándar
+            "large": 1.3,   # 130% del tamaño estándar
         }
         
-        # Default square footage for common room types
+        # Pies cuadrados predeterminados para tipos de habitaciones comunes
         self.default_room_sizes = {
-            "bedroom": 120,      # sq ft
+            "bedroom": 120,      
             "bathroom": 50,
             "kitchen": 100,
             "living room": 200,
@@ -39,7 +39,7 @@ class TextUnderstandingModule:
             "entryway": 20
         }
         
-        # Adjacency keywords
+        # Palabras clave para el grafo   de adyacencia
         self.adjacency_keywords = [
             "next to", "adjacent to", "beside", "connected to", 
             "near", "close to", "adjoining", "off of", "opens to"
@@ -47,18 +47,18 @@ class TextUnderstandingModule:
     
     def parse_prompt(self, prompt: str) -> Dict[str, Any]:
         """
-        Parse a natural language prompt into structured floor plan requirements.
+        Analiza un prompt en lenguaje natural y lo convierte en requerimientos estructurados para el plano.
         
         Args:
-            prompt: Natural language description of floor plan requirements
+            prompt: Descripción en lenguaje natural de los requerimientos del plano
             
         Returns:
-            Dictionary containing parsed requirements
+            Diccionario conteniendo los requerimientos analizados
         """
-        # Process with spaCy
+        # Procesar con spaCy
         doc = nlp(prompt.lower())
         
-        # Extract basic info
+        # Extraer información básica
         result = {
             "rooms": self._extract_rooms(doc),
             "adjacency": self._extract_adjacency(doc),
@@ -67,37 +67,37 @@ class TextUnderstandingModule:
             "original_prompt": prompt
         }
         
-        # Validate and fill in missing information
+        # Validar y completar información faltante
         result = self._validate_and_complete(result)
         
         return result
     
     def _extract_rooms(self, doc) -> List[Dict[str, Any]]:
-        """Extract room information including counts and sizes."""
+        """Extrae información de habitaciones incluyendo cantidades y tamaños."""
         rooms = []
         room_counts = {}
         
-        # First pass: Find explicit room counts
+        # Primer paso: Encontrar cantidades explícitas de habitaciones
         for token in doc:
             if token.like_num and token.head.text in self.room_types:
                 room_type = token.head.text
                 count = int(token.text) if token.text.isdigit() else self._text_to_number(token.text)
                 room_counts[room_type] = count
             
-            # Handle phrases like "two bedrooms"
+            # Manejar frases como "dos dormitorios"
             if token.like_num and token.i < len(doc) - 1:
                 next_token = doc[token.i + 1]
                 if next_token.text in self.room_types:
                     count = int(token.text) if token.text.isdigit() else self._text_to_number(token.text)
                     room_counts[next_token.text] = count
         
-        # Second pass: Find room mentions with size descriptors
+        # Segundo paso: Encontrar menciones de habitaciones con descriptores de tamaño
         for room_type in self.room_types:
             if room_type in doc.text:
-                # If we didn't find an explicit count, default to 1
+                # Si no encontramos una cantidad explícita, usar 1 por defecto
                 count = room_counts.get(room_type, 1)
                 
-                # Look for size descriptors
+                # Buscar descriptores de tamaño
                 size_factor = 1.0
                 size_text = "medium"
                 
@@ -108,11 +108,11 @@ class TextUnderstandingModule:
                         size_text = size
                         break
                 
-                # Calculate approximate square footage
+                # Calcular pies cuadrados aproximados
                 base_size = self.default_room_sizes.get(room_type, 100)
                 square_footage = base_size * size_factor
                 
-                # Add to our rooms list
+                # Agregar a nuestra lista de habitaciones
                 rooms.append({
                     "type": room_type,
                     "count": count,
@@ -123,17 +123,17 @@ class TextUnderstandingModule:
         return rooms
     
     def _extract_adjacency(self, doc) -> List[Dict[str, str]]:
-        """Extract adjacency relationships between rooms."""
+        """Extrae relaciones de adyacencia entre habitaciones."""
         adjacencies = []
         
-        # Look for adjacency phrases
+        # Buscar frases de adyacencia
         text = doc.text
         for keyword in self.adjacency_keywords:
             if keyword in text:
-                # Find the sentence containing this keyword
+                # Encontrar la oración que contiene esta palabra clave
                 for sent in doc.sents:
                     if keyword in sent.text:
-                        # Simple pattern matching for now
+                        # Coincidencia de patrones simple por ahora
                         parts = sent.text.split(keyword)
                         if len(parts) == 2:
                             room1 = self._find_closest_room_mention(parts[0])
@@ -149,13 +149,13 @@ class TextUnderstandingModule:
         return adjacencies
     
     def _extract_style(self, doc) -> Dict[str, Any]:
-        """Extract style preferences from the prompt."""
-        style = {"primary_style": "modern"}  # Default style
+        """Extrae preferencias de estilo del prompt."""
+        style = {"primary_style": "modern"}  # Estilo por defecto
         
-        # Common architectural styles
+        # Estilos arquitectónicos comunes
         styles = ["modern", "traditional", "minimalist"]
         
-        # Check for style mentions
+        # Verificar menciones de estilo
         for style_name in styles:
             if style_name in doc.text:
                 style["primary_style"] = style_name
@@ -164,10 +164,10 @@ class TextUnderstandingModule:
         return style
     
     def _extract_constraints(self, doc) -> List[str]:
-        """Extract any special constraints or requirements."""
+        """Extrae restricciones o requerimientos especiales."""
         constraints = []
         
-        # Look for common constraint phrases
+        # Buscar frases de restricción comunes
         constraint_phrases = [
             "must have", "should have", "needs to have", "required",
             "important", "necessary", "essential"
@@ -175,7 +175,7 @@ class TextUnderstandingModule:
         
         for phrase in constraint_phrases:
             if phrase in doc.text:
-                # Find the sentence containing this phrase
+                # Encontrar la oración que contiene esta frase
                 for sent in doc.sents:
                     if phrase in sent.text:
                         constraints.append(sent.text)
@@ -183,8 +183,8 @@ class TextUnderstandingModule:
         return constraints
     
     def _validate_and_complete(self, parsed_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate parsed data and fill in missing information."""
-        # Make sure we have at least one room
+        """Valida los datos analizados y completa información faltante."""
+        # Asegurarse de que tengamos al menos una habitación
         if not parsed_data["rooms"]:
             parsed_data["rooms"] = [
                 {"type": "bedroom", "count": 2, "size_descriptor": "medium", 
@@ -197,7 +197,7 @@ class TextUnderstandingModule:
                  "approximate_sqft": self.default_room_sizes["living room"]}
             ]
         
-        # Add total stats
+        # Agregar estadísticas totales
         total_rooms = sum(room["count"] for room in parsed_data["rooms"])
         total_sqft = sum(room["count"] * room["approximate_sqft"] for room in parsed_data["rooms"])
         
@@ -209,14 +209,14 @@ class TextUnderstandingModule:
         return parsed_data
     
     def _find_closest_room_mention(self, text_snippet: str) -> Optional[str]:
-        """Find the room type mentioned closest to the end of the text snippet."""
+        """Encuentra el tipo de habitación mencionado más cerca del final del fragmento de texto."""
         for room_type in self.room_types:
             if room_type in text_snippet:
                 return room_type
         return None
     
     def _text_to_number(self, text: str) -> int:
-        """Convert text number words to integers."""
+        """Convierte palabras numéricas a enteros."""
         word_to_num = {
             "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
             "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10
@@ -224,34 +224,34 @@ class TextUnderstandingModule:
         return word_to_num.get(text.lower(), 1)
     
     def generate_report(self, parsed_data: Dict[str, Any]) -> str:
-        """Generate a human-readable report of the parsed requirements."""
-        report = ["Floor Plan Requirements:"]
+        """Genera un reporte legible de los requerimientos analizados."""
+        report = ["Requerimientos del Plano:"]
         report.append("-" * 50)
         
-        # Add room information
-        report.append("Rooms:")
+        # Agregar información de habitaciones
+        report.append("Habitaciones:")
         for room in parsed_data["rooms"]:
             report.append(f"  - {room['count']} {room['size_descriptor']} {room['type']} "
-                         f"(~{room['approximate_sqft']} sq ft each)")
+                         f"(~{room['approximate_sqft']} pies cuadrados cada una)")
         
-        # Add adjacency information
+        # Agregar información de adyacencia
         if parsed_data["adjacency"]:
-            report.append("\nRoom Relationships:")
+            report.append("\nRelaciones entre Habitaciones:")
             for adj in parsed_data["adjacency"]:
-                report.append(f"  - {adj['room1']} should be {adj['relationship']} {adj['room2']}")
+                report.append(f"  - {adj['room1']} debe estar {adj['relationship']} {adj['room2']}")
         
-        # Add style information
-        report.append(f"\nStyle: {parsed_data['style']['primary_style']}")
+        # Agregar información de estilo
+        report.append(f"\nEstilo: {parsed_data['style']['primary_style']}")
         
-        # Add constraints
+        # Agregar restricciones
         if parsed_data["constraints"]:
-            report.append("\nSpecial Requirements:")
+            report.append("\nRequerimientos Especiales:")
             for constraint in parsed_data["constraints"]:
                 report.append(f"  - {constraint}")
         
-        # Add stats
-        report.append("\nSummary Statistics:")
-        report.append(f"  - Total rooms: {parsed_data['stats']['total_rooms']}")
-        report.append(f"  - Approximate total area: {parsed_data['stats']['total_approximate_sqft']} sq ft")
+        # Agregar estadísticas
+        report.append("\nEstadísticas Resumen:")
+        report.append(f"  - Total de habitaciones: {parsed_data['stats']['total_rooms']}")
+        report.append(f"  - Área total aproximada: {parsed_data['stats']['total_approximate_sqft']} pies cuadrados")
         
         return "\n".join(report)

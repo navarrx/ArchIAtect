@@ -52,3 +52,18 @@ def get_all_floorplans(db: Session, page: int = 1, limit: int = 10):
         )
         for g in generations
     ]
+
+def get_recent_floorplans(db: Session, user_id: int, limit: int = 5):
+    generations = db.query(crud.Generation).filter(crud.Generation.user_id == user_id).order_by(crud.Generation.created_at.desc()).limit(limit).all()
+    return [
+        GenerationResponse(
+            id=g.id,
+            prompt=g.prompt,
+            layout_image_url=g.layout_image_url,
+            sd_image_url=g.sd_image_url,
+            created_at=g.created_at,
+            status=g.status,
+            error_message=g.error_message
+        )
+        for g in generations
+    ]
