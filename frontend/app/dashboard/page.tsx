@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Users, Zap, AlertCircle, Clock, CheckCircle2, XCircle, KeyRound, Mail } from "lucide-react"
+import { Loader2, Users, Zap, AlertCircle, Clock, CheckCircle2, XCircle, KeyRound, Mail, BarChart3, TrendingUp, Activity, Shield } from "lucide-react"
 import axios from "axios"
 import {
   LineChart,
@@ -90,8 +90,11 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto py-16 px-4 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando dashboard...</p>
+        </div>
       </div>
     )
   }
@@ -121,227 +124,315 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 px-4 md:px-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-
-      {/* Key Metrics */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_users || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +{stats?.new_users_week || 0} esta semana
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Generaciones</CardTitle>
-            <Zap className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_generations || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.success_rate || 0}% exitosas
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Espera</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.pending_generations || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              generaciones pendientes
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Errores Frecuentes</CardTitle>
-            <AlertCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {stats?.top_errors.slice(0, 3).map((error, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                    {error.message}
-                  </span>
-                  <span className="font-medium">{error.count}</span>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
+      {/* Header Section - Apple Style */}
+      <section className="py-16 px-4 md:px-6">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center shadow-2xl">
+                  <BarChart3 className="h-10 w-10 text-primary-foreground" />
                 </div>
-              ))}
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Dashboard
+            </h1>
+            
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Panel de administración con métricas y estadísticas en tiempo real
+            </p>
+          </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Generaciones por Día</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={stats?.generations_by_day}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="date" 
-                    tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
-                  />
-                  <YAxis />
-                  <Tooltip 
-                    labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="count" 
-                    stroke="#8884d8" 
-                    name="Generaciones"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Key Metrics */}
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-2xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-blue-600" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">{stats?.total_users || 0}</div>
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <TrendingUp className="h-4 w-4 mr-1 text-green-500" />
+                  +{stats?.new_users_week || 0} esta semana
+                </p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Métodos de Login</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={stats?.login_methods}
-                    dataKey="count"
-                    nameKey="method"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={80}
-                    label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
-                  >
-                    {stats?.login_methods.map((entry) => (
-                      <Cell 
-                        key={`cell-${entry.method}`} 
-                        fill={LOGIN_METHOD_COLORS[entry.method as keyof typeof LOGIN_METHOD_COLORS]} 
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-sm font-medium">Total Generaciones</CardTitle>
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/10 to-purple-500/20 rounded-2xl flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-purple-600" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">{stats?.total_generations || 0}</div>
+                <p className="text-sm text-muted-foreground flex items-center">
+                  <CheckCircle2 className="h-4 w-4 mr-1 text-green-500" />
+                  {stats?.success_rate || 0}% exitosas
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-sm font-medium">En Espera</CardTitle>
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/10 to-yellow-500/20 rounded-2xl flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-yellow-600" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2">{stats?.pending_generations || 0}</div>
+                <p className="text-sm text-muted-foreground">
+                  generaciones pendientes
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-sm font-medium">Errores Frecuentes</CardTitle>
+                <div className="w-12 h-12 bg-gradient-to-br from-red-500/10 to-red-500/20 rounded-2xl flex items-center justify-center">
+                  <AlertCircle className="h-6 w-6 text-red-600" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {stats?.top_errors.slice(0, 3).map((error, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                        {error.message}
+                      </span>
+                      <Badge variant="secondary" className="ml-2">
+                        {error.count}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Charts */}
+          <div className="grid gap-6 md:grid-cols-3 mb-12">
+            <Card className="md:col-span-2 border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Generaciones por Día</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={stats?.generations_by_day}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
+                        stroke="rgba(0,0,0,0.5)"
                       />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+                      <YAxis stroke="rgba(0,0,0,0.5)" />
+                      <Tooltip 
+                        labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#8884d8" 
+                        strokeWidth={3}
+                        name="Generaciones"
+                        dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="md:col-span-3">
-          <CardHeader>
-            <CardTitle>Top Usuarios</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={stats?.top_users}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="count" fill="#8884d8" name="Generaciones" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-xl flex items-center justify-center">
+                    <KeyRound className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-xl">Métodos de Login</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={stats?.login_methods}
+                        dataKey="count"
+                        nameKey="method"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      >
+                        {stats?.login_methods.map((entry) => (
+                          <Cell 
+                            key={`cell-${entry.method}`} 
+                            fill={LOGIN_METHOD_COLORS[entry.method as keyof typeof LOGIN_METHOD_COLORS]} 
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* Latest Data Tables */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Últimas Generaciones</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Prompt</TableHead>
-                  <TableHead>Usuario</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats?.latest_generations.map((gen) => (
-                  <TableRow key={gen.id}>
-                    <TableCell className="max-w-[200px] truncate">
-                      {gen.prompt}
-                    </TableCell>
-                    <TableCell>{gen.user.name}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(gen.status)}>
-                        {gen.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(gen.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+            <Card className="md:col-span-3 border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500/10 to-orange-500/20 rounded-xl flex items-center justify-center">
+                    <Users className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <CardTitle className="text-xl">Top Usuarios</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[300px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stats?.top_users}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                      <XAxis dataKey="name" stroke="rgba(0,0,0,0.5)" />
+                      <YAxis stroke="rgba(0,0,0,0.5)" />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend />
+                      <Bar dataKey="count" fill="#8884d8" name="Generaciones" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Últimos Usuarios</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats?.latest_users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      <Badge variant={user.is_active ? "default" : "secondary"}>
-                        {user.is_active ? "Activo" : "Inactivo"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: es })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Latest Data Tables */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-xl flex items-center justify-center">
+                    <Activity className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <CardTitle className="text-xl">Últimas Generaciones</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-xl overflow-hidden border border-border/50">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30">
+                        <TableHead className="font-semibold">Prompt</TableHead>
+                        <TableHead className="font-semibold">Usuario</TableHead>
+                        <TableHead className="font-semibold">Estado</TableHead>
+                        <TableHead className="font-semibold">Fecha</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stats?.latest_generations.map((gen) => (
+                        <TableRow key={gen.id} className="hover:bg-muted/20">
+                          <TableCell className="max-w-[200px] truncate font-medium">
+                            {gen.prompt}
+                          </TableCell>
+                          <TableCell>{gen.user.name}</TableCell>
+                          <TableCell>
+                            <Badge className={`${getStatusColor(gen.status)} text-white`}>
+                              {gen.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(gen.created_at), 'dd/MM/yyyy HH:mm', { locale: es })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-xl flex items-center justify-center">
+                    <Users className="h-5 w-5 text-green-600" />
+                  </div>
+                  <CardTitle className="text-xl">Últimos Usuarios</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-xl overflow-hidden border border-border/50">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/30">
+                        <TableHead className="font-semibold">Nombre</TableHead>
+                        <TableHead className="font-semibold">Email</TableHead>
+                        <TableHead className="font-semibold">Estado</TableHead>
+                        <TableHead className="font-semibold">Fecha</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {stats?.latest_users.map((user) => (
+                        <TableRow key={user.id} className="hover:bg-muted/20">
+                          <TableCell className="font-medium">{user.name}</TableCell>
+                          <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.is_active ? "default" : "secondary"}>
+                              {user.is_active ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {format(new Date(user.created_at), 'dd/MM/yyyy', { locale: es })}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   )
 } 
