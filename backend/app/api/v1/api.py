@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import floorplans, users, auth, generate, admin
+from app.api.v1.endpoints import floorplans, users, auth, generate, admin, favourite
 
 api_router = APIRouter()
 # Update the prefixes to remove /api/v1
@@ -9,3 +9,4 @@ api_router.include_router(generate.router, prefix="/generate", tags=["generate"]
 api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
+api_router.include_router(favourite.router, prefix="/favourites", tags=["favourites"])
