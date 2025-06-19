@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Download, Loader2, Trash2, ChevronDown, Filter, Calendar, Heart, Sparkles, Building2 } from "lucide-react"
+import { Download, Loader2, Trash2, ChevronDown, Filter, Calendar, Heart, Sparkles, Building2, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -33,6 +33,7 @@ import { Navigation, Pagination } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
+import FeedbackForm from '@/components/feedback-form'
 
 interface Blueprint {
   id: number
@@ -66,6 +67,8 @@ export default function MyBlueprintsPage() {
   const { toast } = useToast()
   const observer = useRef<IntersectionObserver>()
   const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null)
+  const [feedback, setFeedback] = useState<any | null>(null)
+  const [loadingFeedback, setLoadingFeedback] = useState(false)
 
   const lastBlueprintElementRef = useCallback((node: HTMLDivElement) => {
     if (isLoading || isLoadingMore) return
@@ -108,6 +111,30 @@ export default function MyBlueprintsPage() {
       fetchBlueprints(token, 1, true)
     }
   }, [sortOrder])
+
+  useEffect(() => {
+    if (selectedBlueprint) {
+      setLoadingFeedback(true)
+      const token = localStorage.getItem('authToken')
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ratings/my/generation/${selectedBlueprint.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json()
+            setFeedback(data)
+          } else {
+            setFeedback(null)
+          }
+        })
+        .catch(() => setFeedback(null))
+        .finally(() => setLoadingFeedback(false))
+    } else {
+      setFeedback(null)
+    }
+  }, [selectedBlueprint])
 
   const fetchBlueprints = async (token: string, pageNum: number, reset: boolean = false) => {
     try {
@@ -523,7 +550,7 @@ export default function MyBlueprintsPage() {
 
           {/* Modal de Detalles */}
           <Dialog open={!!selectedBlueprint} onOpenChange={() => setSelectedBlueprint(null)}>
-            <DialogContent className="max-w-4xl rounded-2xl">
+            <DialogContent className="max-w-4xl rounded-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl font-semibold text-gray-900">Detalles del Plano</DialogTitle>
               </DialogHeader>
@@ -569,6 +596,35 @@ export default function MyBlueprintsPage() {
                         <Calendar className="h-4 w-4 mr-2" />
                         {new Date(selectedBlueprint.created_at).toLocaleDateString()}
                       </p>
+                    </div>
+                    {/* Feedback Section */}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Reseña</h3>
+                      {loadingFeedback ? (
+                        <div className="text-muted-foreground">Cargando reseña...</div>
+                      ) : feedback && feedback.rating ? (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-1">
+                            {[1,2,3,4,5].map((star) => (
+                              <Star key={star} className={`h-5 w-5 ${star <= feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                            ))}
+                          </div>
+                          {feedback.feedback?.selected_criticisms?.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {feedback.feedback.selected_criticisms.map((crit: string, idx: number) => (
+                                <span key={idx} className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground border border-gray-200">{crit}</span>
+                              ))}
+                            </div>
+                          )}
+                          {feedback.feedback?.custom_feedback && (
+                            <div className="mt-2 text-sm text-gray-700 bg-muted/50 rounded p-2">
+                              {feedback.feedback.custom_feedback}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <FeedbackForm generationId={selectedBlueprint.id} onFeedbackSubmitted={() => setSelectedBlueprint(null)} />
+                      )}
                     </div>
                     <Button
                       className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"

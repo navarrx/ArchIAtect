@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.api import deps
 from app.schemas.rating import Rating, RatingCreate, RatingUpdate
@@ -67,6 +67,18 @@ def get_my_ratings(
     """
     rating_service = RatingService(db)
     return rating_service.get_ratings_by_user(current_user.id)
+
+@router.get("/my/generation/{generation_id}", response_model=Optional[Rating])
+def get_my_rating_for_generation(
+    generation_id: int,
+    db: Session = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user)
+):
+    """
+    Get the current user's rating for a specific generation.
+    """
+    rating_service = RatingService(db)
+    return rating_service.get_rating_by_user_and_generation(current_user.id, generation_id)
 
 @router.put("/{rating_id}", response_model=Rating)
 def update_rating(
