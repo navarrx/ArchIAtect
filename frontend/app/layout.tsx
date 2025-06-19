@@ -21,12 +21,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="es">
-      <body className={inter.className}>
+    <html lang="es" suppressHydrationWarning>
+      <body>
         <ThemeProvider attribute="class" defaultTheme="light">
           <AuthProvider>
             <Navbar />
-            <main>{children}</main>
+            <main className={inter.className}>{children}</main>
             <Toaster richColors position="top-center" />
           </AuthProvider>
         </ThemeProvider>

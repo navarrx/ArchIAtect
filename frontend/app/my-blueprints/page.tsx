@@ -22,6 +22,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import FavouriteButton from "@/components/favourite-button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 
 interface Blueprint {
   id: number
@@ -32,6 +43,14 @@ interface Blueprint {
   status: string
   error_message: string | null
   is_favourite?: boolean
+}
+
+const truncatePrompt = (prompt: string, maxWords: number = 10) => {
+  const words = prompt.split(' ')
+  if (words.length > maxWords) {
+    return words.slice(0, maxWords).join(' ') + '...'
+  }
+  return prompt
 }
 
 export default function MyBlueprintsPage() {
@@ -46,6 +65,7 @@ export default function MyBlueprintsPage() {
   const router = useRouter()
   const { toast } = useToast()
   const observer = useRef<IntersectionObserver>()
+  const [selectedBlueprint, setSelectedBlueprint] = useState<Blueprint | null>(null)
 
   const lastBlueprintElementRef = useCallback((node: HTMLDivElement) => {
     if (isLoading || isLoadingMore) return
@@ -387,8 +407,9 @@ export default function MyBlueprintsPage() {
             {filteredBlueprints.map((blueprint, index) => (
               <Card 
                 key={blueprint.id} 
-                className="group overflow-hidden rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white"
+                className="group overflow-hidden rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white cursor-pointer"
                 ref={index === filteredBlueprints.length - 1 ? lastBlueprintElementRef : null}
+                onClick={() => setSelectedBlueprint(blueprint)}
               >
                 <CardContent className="p-0">
                   <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
@@ -439,7 +460,7 @@ export default function MyBlueprintsPage() {
                   </div>
                   <div className="p-6">
                     <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 leading-tight">
-                      {blueprint.prompt}
+                      {truncatePrompt(blueprint.prompt)}
                     </h3>
                     <p className="text-sm text-gray-500 mb-4 flex items-center">
                       <Calendar className="mr-1 h-3 w-3" />
@@ -449,52 +470,119 @@ export default function MyBlueprintsPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDownload(blueprint)}
+                        onClick={(e) => { e.stopPropagation(); handleDownload(blueprint); }}
                         disabled={!blueprint.sd_image_url && !blueprint.layout_image_url}
-                        className="flex-1 rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50"
+                        className="flex-1 rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50 h-10"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Descargar
                       </Button>
-                      <FavouriteButton
-                        generationId={blueprint.id}
-                        isFavourite={blueprint.is_favourite || false}
-                        onToggle={(isFavourite) => handleFavouriteToggle(blueprint.id, isFavourite)}
-                      />
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-2xl">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-lg">¿Estás seguro?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              Esta acción no se puede deshacer. El plano será eliminado permanentemente.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(blueprint.id.toString())}
-                              className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
+                      <div onClick={e => e.stopPropagation()} className="h-10 flex items-center">
+                        <FavouriteButton
+                          generationId={blueprint.id}
+                          isFavourite={blueprint.is_favourite || false}
+                          onToggle={(isFavourite) => handleFavouriteToggle(blueprint.id, isFavourite)}
+                        />
+                      </div>
+                      <div onClick={e => e.stopPropagation()} className="h-10 flex items-center">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10"
                             >
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-lg">¿Estás seguro?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-600">
+                                Esta acción no se puede deshacer. El plano será eliminado permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(blueprint.id.toString())}
+                                className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+
+          {/* Modal de Detalles */}
+          <Dialog open={!!selectedBlueprint} onOpenChange={() => setSelectedBlueprint(null)}>
+            <DialogContent className="max-w-4xl rounded-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-semibold text-gray-900">Detalles del Plano</DialogTitle>
+              </DialogHeader>
+              {selectedBlueprint && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      spaceBetween={0}
+                      slidesPerView={1}
+                      navigation
+                      pagination={{ clickable: true }}
+                      className="aspect-square rounded-xl overflow-hidden"
+                    >
+                      {selectedBlueprint.sd_image_url && (
+                        <SwiperSlide>
+                          <img
+                            src={selectedBlueprint.sd_image_url}
+                            alt={`${selectedBlueprint.prompt} - Stable Diffusion`}
+                            className="w-full h-full object-contain bg-gray-50"
+                          />
+                        </SwiperSlide>
+                      )}
+                      {selectedBlueprint.layout_image_url && (
+                        <SwiperSlide>
+                          <img
+                            src={selectedBlueprint.layout_image_url}
+                            alt={`${selectedBlueprint.prompt} - Layout`}
+                            className="w-full h-full object-contain bg-gray-50"
+                          />
+                        </SwiperSlide>
+                      )}
+                    </Swiper>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Descripción</h3>
+                      <p className="text-gray-600 leading-relaxed">{selectedBlueprint.prompt}</p>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Fecha de creación</h3>
+                      <p className="text-gray-600 flex items-center">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {new Date(selectedBlueprint.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Button
+                      className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                      onClick={() => handleDownload(selectedBlueprint)}
+                      disabled={!selectedBlueprint.sd_image_url && !selectedBlueprint.layout_image_url}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Descargar plano
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
 
           {/* Loading indicator for infinite scroll */}
           {isLoadingMore && (
