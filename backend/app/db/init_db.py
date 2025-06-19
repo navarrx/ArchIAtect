@@ -11,6 +11,7 @@ from app.services.user_service import UserService
 from app.models.user import User
 from app.models.generation import Generation
 from app.models.favourite import Favourite
+from app.models.rating import Rating
 
 logger = logging.getLogger(__name__)
 

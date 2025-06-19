@@ -19,3 +19,4 @@ class User(Base):
 
     generations = relationship("Generation", back_populates="user")
     favourites = relationship("Favourite", back_populates="user", cascade="all, delete-orphan")
+    ratings = relationship("Rating", back_populates="user", cascade="all, delete-orphan")

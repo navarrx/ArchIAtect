@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, desc
+from sqlalchemy import func, case, desc, cast, Float
 from datetime import datetime, timedelta
 from typing import List
+import json
 
 from app.api.deps import get_db, get_current_user
 from app.models.user import User
 from app.models.generation import Generation
 from app.schemas.user import UserBase
+from app.models.rating import Rating
 
 router = APIRouter()
 
@@ -99,6 +101,67 @@ def get_stats(
         func.count(User.id).label('count')
     ).group_by('method').all()
 
+    # --- MÉTRICAS DE RATING Y FEEDBACK ---
+    # Promedio global de rating
+    avg_rating = db.query(func.avg(cast(Rating.rating, Float))).scalar() or 0
+
+    # Distribución de ratings (cuántos de cada valor 1-5)
+    rating_distribution = db.query(Rating.rating, func.count(Rating.id)).group_by(Rating.rating).all()
+    rating_distribution_dict = {str(r): c for r, c in rating_distribution}
+
+    # Feedbacks más frecuentes (extraer textos de selected_criticisms)
+    feedback_counts = {}
+    feedback_texts = []
+    feedbacks = db.query(Rating.feedback).filter(Rating.feedback.isnot(None)).all()
+    for (fb,) in feedbacks:
+        if not fb:
+            continue
+        if isinstance(fb, str):
+            try:
+                fb = json.loads(fb)
+            except Exception:
+                continue
+        if isinstance(fb, dict):
+            # Si hay críticas seleccionadas, contarlas por texto
+            if "selected_criticisms" in fb and isinstance(fb["selected_criticisms"], list):
+                for crit in fb["selected_criticisms"]:
+                    if crit:
+                        feedback_counts[crit] = feedback_counts.get(crit, 0) + 1
+            # Si hay texto libre, agregarlo a la lista de textos
+            if fb.get("text"):
+                feedback_texts.append(fb["text"])
+        elif isinstance(fb, list):
+            for item in fb:
+                if isinstance(item, str):
+                    feedback_counts[item] = feedback_counts.get(item, 0) + 1
+
+    # Top 5 feedbacks estructurados (por texto real)
+    top_feedbacks = sorted(feedback_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+    # Últimos 5 feedbacks escritos o seleccionados
+    latest_feedbacks = db.query(Rating.feedback, Rating.rating, Rating.id).filter(Rating.feedback.isnot(None)).order_by(Rating.id.desc()).limit(5).all()
+    latest_feedbacks_list = []
+    for fb, rating, rid in latest_feedbacks:
+        text = None
+        if fb:
+            if isinstance(fb, str):
+                try:
+                    fb = json.loads(fb)
+                except Exception:
+                    fb = None
+            if isinstance(fb, dict):
+                # Prioridad: texto libre, si no, mostrar la primera crítica seleccionada
+                if fb.get("text"):
+                    text = fb["text"]
+                elif fb.get("selected_criticisms") and isinstance(fb["selected_criticisms"], list) and fb["selected_criticisms"]:
+                    text = fb["selected_criticisms"][0]
+        if text:
+            latest_feedbacks_list.append({"id": rid, "rating": rating, "text": text})
+
+    # Porcentaje de planos calificados
+    total_generations = db.query(func.count(Generation.id)).scalar() or 1
+    rated_generations = db.query(func.count(func.distinct(Rating.generation_id))).scalar() or 0
+    percent_rated = round((rated_generations / total_generations) * 100, 2) if total_generations else 0
+
     return {
         "total_users": total_users,
         "new_users_week": new_users,
@@ -148,5 +211,10 @@ def get_stats(
         "login_methods": [
             {"method": method, "count": count}
             for method, count in login_methods
-        ]
+        ],
+        "avg_rating": round(avg_rating, 2),
+        "rating_distribution": rating_distribution_dict,
+        "top_feedbacks": [{"feedback": k, "count": v} for k, v in top_feedbacks],
+        "latest_feedbacks": latest_feedbacks_list,
+        "percent_rated": percent_rated
     } 
