@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Loader2, Users, Zap, AlertCircle, Clock, CheckCircle2, XCircle, KeyRound, Mail, BarChart3, TrendingUp, Activity, Shield } from "lucide-react"
+import { Loader2, Users, Zap, AlertCircle, Clock, CheckCircle2, XCircle, KeyRound, Mail, BarChart3, TrendingUp, Activity, Shield, Star } from "lucide-react"
 import axios from "axios"
 import {
   LineChart,
@@ -51,6 +51,11 @@ interface DashboardStats {
     is_active: boolean
   }[]
   login_methods: { method: string; count: number }[]
+  avg_rating: number
+  rating_distribution: { [key: string]: number }
+  top_feedbacks: { feedback: string; count: number }[]
+  latest_feedbacks: { id: number; rating: number; text: string }[]
+  percent_rated: number
 }
 
 const LOGIN_METHOD_COLORS = {
@@ -185,39 +190,47 @@ export default function DashboardPage() {
 
             <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-sm font-medium">En Espera</CardTitle>
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-500/10 to-yellow-500/20 rounded-2xl flex items-center justify-center">
-                  <Clock className="h-6 w-6 text-yellow-600" />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold mb-2">{stats?.pending_generations || 0}</div>
-                <p className="text-sm text-muted-foreground">
-                  generaciones pendientes
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">Errores Frecuentes</CardTitle>
                 <div className="w-12 h-12 bg-gradient-to-br from-red-500/10 to-red-500/20 rounded-2xl flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {stats?.top_errors.slice(0, 3).map((error, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
-                      <span className="text-sm text-muted-foreground truncate max-w-[200px]">
-                        {error.message}
-                      </span>
-                      <Badge variant="secondary" className="ml-2">
-                        {error.count}
-                      </Badge>
-                    </div>
-                  ))}
+                {stats?.top_errors?.length ? (
+                  <div className="space-y-3">
+                    {stats.top_errors.slice(0, 3).map((error, index) => (
+                      <div key={index} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                        <span className="text-sm text-muted-foreground truncate max-w-[200px]">
+                          {error.message}
+                        </span>
+                        <Badge variant="secondary" className="ml-2">
+                          {error.count}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">No se han detectado errores</div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Promedio de Rating */}
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle className="text-sm font-medium">Promedio de Rating</CardTitle>
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400/10 to-yellow-400/20 rounded-2xl flex items-center justify-center">
+                  <Star className="h-6 w-6 text-yellow-500" />
                 </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold mb-2 flex items-center">
+                  {stats?.avg_rating?.toFixed(2) || '0.00'}
+                  <span className="ml-2 text-yellow-500">★</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {stats?.percent_rated || 0}% de planos calificados
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -427,6 +440,78 @@ export default function DashboardPage() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Gráficos de ratings y feedback */}
+          <div className="grid gap-6 md:grid-cols-3 mb-12 mt-12">
+            {/* Distribución de ratings */}
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-yellow-400/10 to-yellow-400/20 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <CardTitle className="text-xl">Distribución de Ratings</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-[200px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={Object.entries(stats?.rating_distribution || {}).map(([rating, count]) => ({ rating, count }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                      <XAxis dataKey="rating" stroke="rgba(0,0,0,0.5)" />
+                      <YAxis stroke="rgba(0,0,0,0.5)" allowDecimals={false} />
+                      <Tooltip />
+                      <Bar dataKey="count" fill="#FFD700" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Feedbacks más frecuentes */}
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-400/10 to-blue-400/20 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-blue-500" />
+                  </div>
+                  <CardTitle className="text-xl">Feedbacks Más Frecuentes</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(stats?.top_feedbacks?.length ? stats.top_feedbacks : [{ feedback: 'Sin datos', count: 0 }]).map((fb, idx) => (
+                    <div key={idx} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm text-muted-foreground truncate max-w-[180px]">{fb.feedback}</span>
+                      <Badge variant="secondary" className="ml-2">{fb.count}</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            {/* Últimos feedbacks escritos */}
+            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-400/10 to-green-400/20 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="h-5 w-5 text-green-500" />
+                  </div>
+                  <CardTitle className="text-xl">Últimos Feedbacks</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {(stats?.latest_feedbacks?.length ? stats.latest_feedbacks : [{ id: 0, rating: 0, text: 'Sin feedbacks' }]).map((fb, idx) => (
+                    <div key={fb.id || idx} className="p-2 rounded-lg bg-muted/30">
+                      <div className="flex items-center mb-1">
+                        <span className="text-yellow-500 font-bold mr-2">{fb.rating}★</span>
+                        <span className="text-sm text-muted-foreground">{fb.text}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

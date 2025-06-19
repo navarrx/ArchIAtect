@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import BlueprintDisplay from "@/components/blueprint-display"
 import BlueprintGallery from "@/components/blueprint-gallery"
+import FeedbackForm from "@/components/feedback-form"
 import { useAuth } from "@/hooks/useAuth"
 import Link from "next/link"
 import { Building2 } from "lucide-react"
@@ -23,6 +24,8 @@ export default function BlueprintGenerator() {
   const [layoutImage, setLayoutImage] = useState<string | null>(null)
   const [sdImage, setSdImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [generationId, setGenerationId] = useState<number | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
 
   const handleGenerate = async (prompt: string) => {
     if (!isAuthenticated) {
@@ -33,6 +36,8 @@ export default function BlueprintGenerator() {
     setError(null)
     setLayoutImage(null)
     setSdImage(null)
+    setGenerationId(null)
+    setShowFeedback(false)
 
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/generate`, {
@@ -47,6 +52,8 @@ export default function BlueprintGenerator() {
 
       setLayoutImage(response.data.layout_image_url)
       setSdImage(response.data.sd_image_url || null)
+      setGenerationId(response.data.id)
+      setShowFeedback(true)
     } catch (err: any) {
       console.error("Error generating blueprint:", err)
       if (err.response && err.response.data && err.response.data.detail) {
@@ -57,6 +64,10 @@ export default function BlueprintGenerator() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleFeedbackSubmitted = () => {
+    setShowFeedback(false)
   }
 
   // 🟢 Handler para formulario "With Parameters"
@@ -276,6 +287,16 @@ export default function BlueprintGenerator() {
             loading={loading} 
           />
         </div>
+
+        {/* Feedback Form */}
+        {showFeedback && generationId && (
+          <div className="mt-8">
+            <FeedbackForm 
+              generationId={generationId} 
+              onFeedbackSubmitted={handleFeedbackSubmitted}
+            />
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="gallery">
