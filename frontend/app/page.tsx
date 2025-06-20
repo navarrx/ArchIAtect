@@ -4,6 +4,7 @@ import Link from "next/link"
 import { ArrowRight, Building2, Sparkles, Users, Zap, Eye, Download, CheckCircle, Plus, Clock, Star, TrendingUp, Calendar, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Carousel } from "@/components/ui/carousel"
 import { useAuth } from "@/hooks/useAuth"
 import { useEffect, useState } from "react"
 import axios from "axios"
@@ -33,6 +34,79 @@ function GuestHome() {
     total_users: number
     success_rate: number
   } | null>(null)
+  
+  const [carouselImages, setCarouselImages] = useState<{
+    src: string
+    alt: string
+    title?: string
+    description?: string
+  }[]>([])
+  
+  const [carouselLoading, setCarouselLoading] = useState(true)
+
+  // Función para obtener imágenes aleatorias del backend
+  const fetchRandomBlueprints = async () => {
+    try {
+      setCarouselLoading(true)
+      // Obtener 12 planos recientes para tener más opciones
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/floorplans/?limit=12&sort=newest`)
+      const blueprints = response.data
+      
+      // Filtrar solo los que tienen imágenes
+      const blueprintsWithImages = blueprints.filter((blueprint: Blueprint) => 
+        blueprint.sd_image_url || blueprint.layout_image_url
+      )
+      
+      // Mezclar aleatoriamente y tomar los primeros 3
+      const shuffledBlueprints = blueprintsWithImages
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 3)
+      
+      // Convertir a formato del carrusel
+      const images = shuffledBlueprints.map((blueprint: Blueprint) => ({
+        src: blueprint.sd_image_url || blueprint.layout_image_url,
+        alt: blueprint.prompt,
+        title: truncatePrompt(blueprint.prompt, 8),
+        description: `Generado el ${new Date(blueprint.created_at).toLocaleDateString()}`
+      }))
+      
+      setCarouselImages(images)
+    } catch (error) {
+      console.error('Error fetching random blueprints:', error)
+      // Fallback a imágenes de placeholder si hay error
+      setCarouselImages([
+        {
+          src: "/placeholder.jpg",
+          alt: "Plano de casa moderna de 3 habitaciones",
+          title: "Casa Moderna de 3 Habitaciones",
+          description: "Diseño contemporáneo con espacios abiertos y máxima funcionalidad"
+        },
+        {
+          src: "/placeholder.jpg",
+          alt: "Plano de casa familiar de 4 habitaciones",
+          title: "Casa Familiar de 4 Habitaciones",
+          description: "Distribución optimizada para familias con niños"
+        },
+        {
+          src: "/placeholder.jpg",
+          alt: "Plano de casa minimalista de 2 habitaciones",
+          title: "Casa Minimalista de 2 Habitaciones",
+          description: "Diseño limpio y eficiente para parejas o profesionales"
+        }
+      ])
+    } finally {
+      setCarouselLoading(false)
+    }
+  }
+
+  // Función para truncar el prompt
+  const truncatePrompt = (prompt: string, maxWords: number = 8) => {
+    const words = prompt.split(' ')
+    if (words.length > maxWords) {
+      return words.slice(0, maxWords).join(' ') + '...'
+    }
+    return prompt
+  }
 
   useEffect(() => {
     const fetchPublicStats = async () => {
@@ -48,6 +122,7 @@ function GuestHome() {
     }
 
     fetchPublicStats()
+    fetchRandomBlueprints()
   }, [])
 
   return (
@@ -87,13 +162,26 @@ function GuestHome() {
             </Button>
           </div>
 
-          {/* Preview Image */}
+          {/* Carrusel de imágenes reales del backend */}
           <div className="relative max-w-4xl mx-auto">
-            <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden">
-              <div className="w-full h-full flex items-center justify-center">
+            {carouselLoading ? (
+              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              </div>
+            ) : carouselImages.length > 0 ? (
+              <Carousel 
+                images={carouselImages}
+                autoPlay={true}
+                interval={4000}
+                showArrows={true}
+                showDots={true}
+                className="max-w-4xl mx-auto"
+              />
+            ) : (
+              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden flex items-center justify-center">
                 <Building2 className="w-24 h-24 text-muted-foreground/30" />
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -191,52 +279,6 @@ function GuestHome() {
         </div>
       </section>
 
-      {/* Gallery Preview Section */}
-      <section className="py-24 px-4 md:px-6 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Explora la Galería
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Descubre planos increíbles generados por nuestra comunidad
-          </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {[
-              { title: "Apartamento Moderno", desc: "75m² con diseño minimalista", type: "Residencial" },
-              { title: "Casa Familiar", desc: "120m² con jardín integrado", type: "Familiar" },
-              { title: "Oficina Creativa", desc: "90m² estilo industrial", type: "Comercial" }
-            ].map((item, i) => (
-              <div key={i} className="group cursor-pointer">
-                <div className="aspect-[4/3] bg-gradient-to-br from-muted to-muted/50 rounded-2xl border border-border/50 overflow-hidden mb-4 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg">
-                  <div className="w-full h-full flex items-center justify-center">
-                    <Building2 className="w-16 h-16 text-muted-foreground/40" />
-                  </div>
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-lg mb-1">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm mb-2">{item.desc}</p>
-                  <span className="inline-block px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                    {item.type}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto" asChild>
-              <Link href="/discover">
-                Ver Más Planos
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Stats Section */}
       <section className="py-24 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
@@ -278,7 +320,7 @@ function GuestHome() {
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto" asChild>
               <Link href="/register">Crear Cuenta Gratis</Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10" asChild>
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto bg-white text-primary hover:bg-gray-100" asChild>
               <Link href="/generator">Probar Ahora</Link>
             </Button>
           </div>
@@ -300,7 +342,6 @@ function GuestHome() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><Link href="/generator" className="hover:text-foreground">Generador</Link></li>
                 <li><Link href="/discover" className="hover:text-foreground">Galería</Link></li>
-                <li><Link href="/my-blueprints" className="hover:text-foreground">Mis Planos</Link></li>
               </ul>
             </div>
             <div>
@@ -308,20 +349,17 @@ function GuestHome() {
               <ul className="space-y-2 text-muted-foreground">
                 <li><Link href="/login" className="hover:text-foreground">Iniciar Sesión</Link></li>
                 <li><Link href="/register" className="hover:text-foreground">Registrarse</Link></li>
-                <li><Link href="/profile" className="hover:text-foreground">Mi Perfil</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Soporte</h4>
+              <h4 className="font-semibold mb-4">Desarrollo</h4>
               <ul className="space-y-2 text-muted-foreground">
-                <li><a href="#" className="hover:text-foreground">Ayuda</a></li>
-                <li><a href="#" className="hover:text-foreground">Contacto</a></li>
-                <li><a href="#" className="hover:text-foreground">Privacidad</a></li>
+                <li><a href="https://github.com/navarrx/ArchIAtect" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">Repositorio</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t mt-12 pt-8 text-center text-muted-foreground">
-            <p>&copy; 2024 ArchIAtect. Todos los derechos reservados.</p>
+            <p>&copy; 2025 ArchIAtect. Todos los derechos reservados.</p>
           </div>
         </div>
       </footer>
