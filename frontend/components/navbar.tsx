@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
-import { Menu, X, User, Eye, EyeOff, Shield, Settings, Calendar, Mail, Lock, ArrowLeft, LogOut, Building2, Sparkles, BarChart3 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Menu, X, User, Eye, EyeOff, Shield, Settings, Calendar, Mail, Lock, ArrowLeft, LogOut, Building2, Sparkles, BarChart3, Moon, Sun } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,11 +14,18 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth.tsx"
+import { useTheme } from "next-themes"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
   const pathname = usePathname()
+  const { theme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = () => {
     logout()
@@ -62,6 +69,24 @@ export default function Navbar() {
 
           {/* Desktop Auth Section */}
           <div className="hidden md:flex items-center space-x-3">
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="rounded-xl hover:bg-muted/50 transition-all duration-200"
+              aria-label="Cambiar tema"
+            >
+              {mounted ? (
+                theme === "dark" ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -167,6 +192,32 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-3 border-t border-border/50 mt-4">
             <div className="flex flex-col space-y-2">
+              {/* Theme Toggle Mobile */}
+              <button
+                onClick={() => {
+                  setTheme(theme === "dark" ? "light" : "dark")
+                }}
+                className="px-4 py-3 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 flex items-center"
+              >
+                {mounted ? (
+                  theme === "dark" ? (
+                    <>
+                      <Sun className="mr-3 h-4 w-4" />
+                      Tema Claro
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="mr-3 h-4 w-4" />
+                      Tema Oscuro
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Moon className="mr-3 h-4 w-4" />
+                    Tema Oscuro
+                  </>
+                )}
+              </button>
               {navItems.map((item) => (
                 <Link
                   key={item.name}

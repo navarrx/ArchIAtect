@@ -116,36 +116,43 @@ class LayoutGenerationModule:
         Genera una imagen de plano limpia en blanco y negro binaria adecuada para entrada de ControlNet.
         - Paredes negras
         - Habitaciones blancas
-        - Sin puertas
-        - Sin etiquetas
-        - Sin colores
+        - Dibujar puertas como huecos o marcas visuales
+        - Sin etiquetas ni colores
         """
-
         grid = np.array(layout_result["grid"])
         room_positions = layout_result["room_positions"]
+        doorways = layout_result.get("doorways", [])
 
         fig, ax = plt.subplots(figsize=(12, 10))
         ax.set_facecolor('white')  # fondo en blanco
 
-        # Dibujar los planos en blanco
+        # Dibujar los planos en blanco con bordes negros
         for room_id, room_info in room_positions.items():
             x, y = room_info["x"], room_info["y"]
             width, height = room_info["width"], room_info["height"]
-
-            rect = plt.Rectangle((x, y), width, height, facecolor='white', edgecolor='black', linewidth=2.0)
+            rect = plt.Rectangle((x, y), width, height, facecolor='white', edgecolor='black', linewidth=3.0)
             ax.add_patch(rect)
+
+        # Dibujar puertas como pequeños huecos blancos en el borde
+        for doorway in doorways:
+            x, y, orientation = doorway["x"], doorway["y"], doorway["orientation"]
+            if orientation == 'vertical':
+                door_rect = plt.Rectangle((x - 0.05, y - 0.5), 0.1, 1.0, facecolor='white', edgecolor='white')
+            else:  # horizontal
+                door_rect = plt.Rectangle((x - 0.5, y - 0.05), 1.0, 0.1, facecolor='white', edgecolor='white')
+            ax.add_patch(door_rect)
 
         ax.set_xlim(-1, grid.shape[1] + 1)
         ax.set_ylim(grid.shape[0] + 1, -1)
         ax.set_aspect('equal')
         ax.axis('off')
 
-        # Guardar sin líneas, etiquetas ni puertas
         if save_path:
             plt.savefig(save_path, dpi=150, bbox_inches='tight', pad_inches=0, facecolor='white')
+            plt.close(fig)
 
         return fig
-    
+
     def _preprocess_rooms(self, rooms_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Procesa datos de habitaciones para incluir dimensiones e IDs."""
         processed_rooms = []
@@ -232,6 +239,7 @@ class LayoutGenerationModule:
             ("living room", "dining room"),  # Living cerca del comedor
             ("entryway", "living room"),  # Entrada cerca del living
             ("garage", "kitchen"),  # Garage suele tener acceso a la cocina
+            ("living room", "bathroom"),  # Living room debe tener acceso a al menos un baño
         ]
         
         for room1_type, room2_type in common_adjacencies:
@@ -242,6 +250,31 @@ class LayoutGenerationModule:
                 for id2 in room2_ids:
                     if id1 != id2 and not graph.has_edge(id1, id2):
                         graph.add_edge(id1, id2, weight=5)  # Peso más bajo para adyacencias comunes
+        
+        # CONEXIONES OBLIGATORIAS CON PESO ALTO
+        # =====================================
+        # Asegurar que living room esté conectado al dining room con peso muy alto
+        living_room_ids = [r["id"] for r in rooms if r["type"] == "living room"]
+        dining_room_ids = [r["id"] for r in rooms if r["type"] == "dining room"]
+        
+        for living_id in living_room_ids:
+            for dining_id in dining_room_ids:
+                if living_id != dining_id:
+                    # Remover cualquier arista existente para sobrescribir su peso
+                    if graph.has_edge(living_id, dining_id):
+                        graph.remove_edge(living_id, dining_id)
+                    # Agregar arista con peso muy alto para garantizar conexión
+                    graph.add_edge(living_id, dining_id, weight=25)
+        
+        # Asegurar que al menos un baño esté conectado al living room con peso alto
+        bathroom_ids = [r["id"] for r in rooms if r["type"] == "bathroom"]
+        if bathroom_ids and living_room_ids:
+            # Conectar el primer baño al living room con peso alto
+            first_bathroom_id = bathroom_ids[0]
+            for living_id in living_room_ids:
+                if graph.has_edge(living_id, first_bathroom_id):
+                    graph.remove_edge(living_id, first_bathroom_id)
+                graph.add_edge(living_id, first_bathroom_id, weight=20)
         
         # Agregar conexiones dormitorio-living con peso MUCHO más alto para asegurar adyacencia
         bedroom_ids = [r["id"] for r in rooms if r["type"] == "bedroom" or r["type"] == "master bedroom"]
@@ -275,6 +308,22 @@ class LayoutGenerationModule:
                     graph.add_edge(hallway_id, bedroom_id, weight=15)
         
         # Conectar componentes desconectados - asegurar que todas las habitaciones sean accesibles
+
+        # Forzar que la laundry room esté conectada *solo* al garage
+        laundry_ids = [r["id"] for r in rooms if r["type"] == "laundry room"]
+        garage_ids = [r["id"] for r in rooms if r["type"] == "garage"]
+
+        for lid in laundry_ids:
+            # Remover cualquier otra conexión previa
+            neighbors = list(graph.neighbors(lid))
+            for n in neighbors:
+                if n not in garage_ids:
+                    graph.remove_edge(lid, n)
+            
+            for gid in garage_ids:
+                if not graph.has_edge(lid, gid):
+                    graph.add_edge(lid, gid, weight=15)  # Peso alto para asegurar adyacencia fuerte
+
         components = list(nx.connected_components(graph))
         if len(components) > 1:
             # Conectar cada componente al componente más grande
@@ -655,12 +704,33 @@ class LayoutGenerationModule:
                         doorway_candidates.append((door_x, room1["y"], 'horizontal'))
             if doorway_candidates:
                 door_x, door_y, orientation = doorway_candidates[0]
-                if (room1["type"] == "hallway" or room2["type"] == "hallway" or
-                    room_has_doorway[room1_id] < 3 and room_has_doorway[room2_id] < 3):
+                
+                # Lógica especial para baños: solo 1 puerta por baño
+                room1_is_bathroom = room1["type"] == "bathroom"
+                room2_is_bathroom = room2["type"] == "bathroom"
+                
+                can_add_door = False
+                
+                if room1_is_bathroom or room2_is_bathroom:
+                    # Si es un baño, solo agregar puerta si el baño no tiene ninguna puerta aún
+                    if room1_is_bathroom and room_has_doorway[room1_id] == 0:
+                        can_add_door = True
+                    elif room2_is_bathroom and room_has_doorway[room2_id] == 0:
+                        can_add_door = True
+                else:
+                    # Para habitaciones que no son baños, usar la lógica original
+                    if (room1["type"] == "hallway" or room2["type"] == "hallway" or
+                        room_has_doorway[room1_id] < 3 and room_has_doorway[room2_id] < 3):
+                        can_add_door = True
+                
+                if can_add_door:
                     grid_with_doors[door_y, door_x] = doorway_value
                     room_has_doorway[room1_id] += 1
                     room_has_doorway[room2_id] += 1
+                    
+                if (door_x, door_y) not in {(d["x"], d["y"]) for d in doorways}:
                     doorways.append({"x": door_x, "y": door_y, "orientation": orientation})
+
         return grid_with_doors, doorways
     
     def visualize_layout(self, layout_result: Dict[str, Any], save_path: Optional[str] = None, show_labels: bool = True) -> plt.Figure:
@@ -728,7 +798,19 @@ class LayoutGenerationModule:
         
         return json.dumps(serializable_result, indent=2)
     
-    def generate_svg_representation(self, layout_result: Dict[str, Any]) -> str:
+    
+def has_shared_wall(room1, room2):
+    x_overlap = (room1["x"] < room2["x"] + room2["width"]) and (room2["x"] < room1["x"] + room1["width"])
+    y_overlap = (room1["y"] < room2["y"] + room2["height"]) and (room2["y"] < room1["y"] + room1["height"])
+    if x_overlap:
+        if abs(room1["y"] + room1["height"] - room2["y"]) <= 1 or abs(room2["y"] + room2["height"] - room1["y"]) <= 1:
+            return True
+    if y_overlap:
+        if abs(room1["x"] + room1["width"] - room2["x"]) <= 1 or abs(room2["x"] + room2["width"] - room1["x"]) <= 1:
+            return True
+    return False
+
+def generate_svg_representation(self, layout_result: Dict[str, Any]) -> str:
         """
         Genera una representación SVG del plano.
         

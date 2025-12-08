@@ -3,6 +3,7 @@ from app.ml.pipeline.floorplan_pipeline import FloorPlanGenerator
 from app.core.gcs import upload_to_gcs
 from app.db import crud
 from app.schemas.generation import GenerationResponse
+from app.core.exceptions import NonArchitecturalPromptError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,15 @@ def generate_floorplan(db: Session, user_id: int, prompt: str) -> GenerationResp
         raise ValueError("Prompt cannot be empty")
 
     logger.info(f"🚀 Generating floor plan for user {user_id} with prompt: {prompt}")
-    result = generator.generate_from_prompt(prompt)
+    
+    try:
+        result = generator.generate_from_prompt(prompt)
+    except NonArchitecturalPromptError:
+        # Re-lanzar la excepción para que se maneje en el endpoint
+        raise
+    except Exception as e:
+        logger.error(f"Error generating floor plan: {str(e)}")
+        raise ValueError(f"Error generating floor plan: {str(e)}")
 
     # Subir imágenes a GCS
     layout_url = upload_to_gcs(result["output_files"]["visualization"])

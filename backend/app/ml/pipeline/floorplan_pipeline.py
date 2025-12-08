@@ -23,7 +23,7 @@ class FloorPlanGenerator:
             try:
                 # Obtener la ruta del directorio actual del pipeline
                 current_dir = os.path.dirname(os.path.abspath(__file__))
-                lora_path = os.path.join(current_dir, "..", "lora", "floorplan_lora_weights.safetensors")
+                lora_path = os.path.join(current_dir, "..", "lora", "pytorch_lora_weights2.safetensors")
                 
                 self.sd_module = StableDiffusionControlNetModule(
                     lora_path=lora_path
@@ -142,13 +142,21 @@ class FloorPlanGenerator:
     def generate_sd_image(self, 
                           custom_prompt: Optional[str] = None, 
                           width: int = 768, 
-                          height: int = 768) -> Image.Image:
+                          height: int = 768,
+                          seed: Optional[int] = None) -> Image.Image:
         if not self.use_stable_diffusion:
             raise ValueError("Stable Diffusion is not enabled")
 
         if self.current_controlnet_input_image is None:
             raise ValueError("Layout image not prepared for ControlNet")
 
+        # Usar seed fijo para consistencia, o generar uno basado en el prompt
+        if seed is None:
+            # Generar seed determinístico basado en el prompt para consistencia
+            import hashlib
+            prompt_hash = hashlib.md5(custom_prompt.encode() if custom_prompt else "default".encode()).hexdigest()
+            seed = int(prompt_hash[:8], 16) % (2**32)
+        
         prompt = custom_prompt or (
             "2D architectural floor plan, black and white blueprint, clean lines, accurate room proportions, doors clearly marked, no furniture, no textures, no tiles, no duplicate rooms, top-down view, technical drawing, CAD style, precise, minimal, draw all doors"
         )
@@ -156,12 +164,14 @@ class FloorPlanGenerator:
         image = self.sd_module.generate_from_layout(
             layout_image=self.current_controlnet_input_image,
             prompt=prompt,
-            negative_prompt="blurry, distorted, messy, bad proportions, duplicate rooms, duplicate labels, colorful, textured floor, 3D, perspective view, shadows, rendered, photorealistic, grass, tiles, carpet, wood floor, wrong room placement, wrong layout",
-            num_inference_steps=40,
-            guidance_scale=9.5,
-            controlnet_conditioning_scale=1.8,
+            negative_prompt="blurry, distorted, messy, bad proportions, duplicate rooms, duplicate labels, colorful, textured floor, 3D, perspective view, shadows, rendered, photorealistic, grass, tiles, carpet, wood floor, wrong room placement, wrong layout, extra rooms, missing walls, incorrect layout, furniture, decorations, plants, rugs, curtains",
+            num_inference_steps=80,  # Aumentado para más estabilidad
+            guidance_scale=8,      # Reducido para menos agresividad
+            controlnet_conditioning_scale=1.5,  # Aumentado para mejor adherencia al layout
             width=width,
-            height=height
+            height=height,
+            seed=seed,  # Agregar seed para consistencia
+            strategy="strict"  # Usar estrategia más estricta
         )
 
         self.current_sd_image = image

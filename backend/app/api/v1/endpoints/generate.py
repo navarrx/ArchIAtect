@@ -3,6 +3,7 @@ from app.schemas.generation import GenerationRequest, GenerationResponse
 from app.services.generation_service import generate_floorplan, get_all_floorplans
 from app.db.session import get_db
 from app.api.deps import get_current_user
+from app.core.exceptions import NonArchitecturalPromptError
 import logging
 
 router = APIRouter()
@@ -20,6 +21,12 @@ def generate_floorplan_endpoint(
     try:
         result = generate_floorplan(db, current_user.id, req.prompt)
         return result
+    except NonArchitecturalPromptError as e:
+        logger.warning(f"Non-architectural prompt detected: {req.prompt}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        logger.error(f"Validation error in generate endpoint: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error in generate endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -52,6 +59,12 @@ def generate_floorplan_test(
         # Using a default user ID of 1 for testing
         result = generate_floorplan(db, 1, req.prompt)
         return result
+    except NonArchitecturalPromptError as e:
+        logger.warning(f"Non-architectural prompt detected in test endpoint: {req.prompt}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as e:
+        logger.error(f"Validation error in test generate endpoint: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error in test generate endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
