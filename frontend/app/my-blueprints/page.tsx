@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
 import 'swiper/css'
@@ -212,7 +213,7 @@ export default function MyBlueprintsPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     try {
       const token = localStorage.getItem("authToken")
 
@@ -229,6 +230,11 @@ export default function MyBlueprintsPage() {
 
       // Remove the deleted blueprint from the state
       setBlueprints((prev) => prev.filter((blueprint) => blueprint.id !== id))
+      
+      // Cerrar el diálogo si el plano eliminado estaba seleccionado
+      if (selectedBlueprint?.id === id) {
+        setSelectedBlueprint(null)
+      }
 
       toast({
         title: "Plano eliminado",
@@ -306,16 +312,19 @@ export default function MyBlueprintsPage() {
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6 max-w-7xl">
-      {/* Header Section */}
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+      <div className="container mx-auto py-12 px-4 md:px-6 max-w-7xl relative z-10">
+        {/* Header Section */}
       <div className="text-center mb-12">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center arch-shadow">
               <Building2 className="h-8 w-8 text-white" />
             </div>
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
-              <Sparkles className="h-3 w-3 text-blue-500" />
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-background rounded-full flex items-center justify-center arch-shadow">
+              <Sparkles className="h-3 w-3 text-primary" />
             </div>
           </div>
         </div>
@@ -328,7 +337,7 @@ export default function MyBlueprintsPage() {
       </div>
 
       {/* Stats and Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 rounded-2xl border border-border/50 arch-shadow bg-card/70">
         <div className="text-center md:text-left mb-4 md:mb-0">
           <div className="text-2xl font-bold text-gray-900">{filteredBlueprints.length}</div>
           <div className="text-sm text-muted-foreground">
@@ -336,13 +345,13 @@ export default function MyBlueprintsPage() {
           </div>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline" asChild className="rounded-xl">
+          <Button variant="outline" asChild className="rounded-xl arch-shadow hover:arch-shadow-lg transition-all duration-300">
             <Link href="/favourites">
               <Heart className="mr-2 h-4 w-4" />
               Mis Favoritos
             </Link>
           </Button>
-          <Button asChild className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+          <Button asChild className="rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 arch-shadow-lg transition-all duration-300">
             <Link href="/generator">
               <Sparkles className="mr-2 h-4 w-4" />
               Crear Nuevo Plano
@@ -430,11 +439,11 @@ export default function MyBlueprintsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredBlueprints.map((blueprint, index) => (
               <Card 
                 key={blueprint.id} 
-                className="group overflow-hidden rounded-2xl border border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 bg-white cursor-pointer"
+            className="group overflow-hidden rounded-2xl arch-shadow border-border/50 bg-card/70 cursor-pointer hover:arch-shadow-lg transition-all duration-200 scroll-optimized content-visibility-auto"
                 ref={index === filteredBlueprints.length - 1 ? lastBlueprintElementRef : null}
                 onClick={() => setSelectedBlueprint(blueprint)}
               >
@@ -444,7 +453,10 @@ export default function MyBlueprintsPage() {
                       <img
                         src={blueprint.sd_image_url || blueprint.layout_image_url}
                         alt={blueprint.prompt}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                        decoding="async"
+                        style={{ willChange: 'transform', contentVisibility: 'auto' }}
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
@@ -532,7 +544,7 @@ export default function MyBlueprintsPage() {
                             <AlertDialogFooter>
                               <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDelete(blueprint.id.toString())}
+                                onClick={() => handleDelete(blueprint.id)}
                                 className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
                               >
                                 Eliminar
@@ -550,27 +562,38 @@ export default function MyBlueprintsPage() {
 
           {/* Modal de Detalles */}
           <Dialog open={!!selectedBlueprint} onOpenChange={() => setSelectedBlueprint(null)}>
-            <DialogContent className="max-w-4xl rounded-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-semibold text-gray-900">Detalles del Plano</DialogTitle>
-              </DialogHeader>
+            <DialogContent className="max-w-6xl max-h-[90vh] rounded-2xl arch-shadow-lg border-border/50 bg-card/95 p-0 overflow-hidden">
               {selectedBlueprint && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 h-full max-h-[90vh]">
+                  {/* Columna izquierda: imágenes */}
+                  <div className="p-6 space-y-4 border-r border-border/50">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                        Plano #{selectedBlueprint.id}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(selectedBlueprint.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
                     <Swiper
                       modules={[Navigation, Pagination]}
                       spaceBetween={0}
                       slidesPerView={1}
                       navigation
                       pagination={{ clickable: true }}
-                      className="aspect-square rounded-xl overflow-hidden"
+                      className="rounded-2xl overflow-hidden arch-shadow bg-muted/40"
+                      style={{ height: 'calc(90vh - 180px)' }}
                     >
                       {selectedBlueprint.sd_image_url && (
                         <SwiperSlide>
                           <img
                             src={selectedBlueprint.sd_image_url}
                             alt={`${selectedBlueprint.prompt} - Stable Diffusion`}
-                            className="w-full h-full object-contain bg-gray-50"
+                            className="w-full h-full object-contain bg-muted/50"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </SwiperSlide>
                       )}
@@ -579,61 +602,88 @@ export default function MyBlueprintsPage() {
                           <img
                             src={selectedBlueprint.layout_image_url}
                             alt={`${selectedBlueprint.prompt} - Layout`}
-                            className="w-full h-full object-contain bg-gray-50"
+                            className="w-full h-full object-contain bg-muted/50"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </SwiperSlide>
                       )}
                     </Swiper>
                   </div>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Descripción</h3>
-                      <p className="text-gray-600 leading-relaxed">{selectedBlueprint.prompt}</p>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Fecha de creación</h3>
-                      <p className="text-gray-600 flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        {new Date(selectedBlueprint.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                    {/* Feedback Section */}
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Reseña</h3>
-                      {loadingFeedback ? (
-                        <div className="text-muted-foreground">Cargando reseña...</div>
-                      ) : feedback && feedback.rating ? (
+
+                  {/* Columna derecha: detalles y reseña con scroll */}
+                  <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 40px)' }}>
+                    <div className="p-6 space-y-6">
+                      {/* Detalles */}
+                      <div className="space-y-4">
                         <div className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            {[1,2,3,4,5].map((star) => (
-                              <Star key={star} className={`h-5 w-5 ${star <= feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
-                            ))}
+                          <DialogTitle className="text-xl font-semibold leading-tight">Detalles del Plano</DialogTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Vista generada por IA y layout base. Guarda, descarga y revisa la retroalimentación.
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-semibold text-muted-foreground">Descripción</h3>
+                          <div className="p-3 rounded-xl bg-muted/40 border border-border/50">
+                            <p className="text-sm text-foreground leading-relaxed">{selectedBlueprint.prompt}</p>
                           </div>
-                          {feedback.feedback?.selected_criticisms?.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {feedback.feedback.selected_criticisms.map((crit: string, idx: number) => (
-                                <span key={idx} className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground border border-gray-200">{crit}</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 rounded-xl bg-card border border-border/50 arch-shadow">
+                            <p className="text-xs text-muted-foreground mb-1">ID</p>
+                            <p className="text-sm font-semibold">#{selectedBlueprint.id}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-card border border-border/50 arch-shadow">
+                            <p className="text-xs text-muted-foreground mb-1">Estado</p>
+                            <p className="text-sm font-semibold capitalize">{selectedBlueprint.status}</p>
+                          </div>
+                        </div>
+
+                        <Button
+                          className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 arch-shadow-lg"
+                          onClick={() => handleDownload(selectedBlueprint)}
+                          disabled={!selectedBlueprint.sd_image_url && !selectedBlueprint.layout_image_url}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Descargar plano
+                        </Button>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-border/50"></div>
+
+                      {/* Reseña */}
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold">Reseña</h3>
+                        {loadingFeedback ? (
+                          <div className="text-muted-foreground text-sm">Cargando reseña...</div>
+                        ) : feedback && feedback.rating ? (
+                          <div className="space-y-3 p-4 rounded-xl bg-muted/40 border border-border/50">
+                            <div className="flex items-center gap-1">
+                              {[1,2,3,4,5].map((star) => (
+                                <Star key={star} className={`h-5 w-5 ${star <= feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
                               ))}
                             </div>
-                          )}
-                          {feedback.feedback?.custom_feedback && (
-                            <div className="mt-2 text-sm text-gray-700 bg-muted/50 rounded p-2">
-                              {feedback.feedback.custom_feedback}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <FeedbackForm generationId={selectedBlueprint.id} onFeedbackSubmitted={() => setSelectedBlueprint(null)} />
-                      )}
+                            {feedback.feedback?.selected_criticisms?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {feedback.feedback.selected_criticisms.map((crit: string, idx: number) => (
+                                  <span key={idx} className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground border border-border/50">{crit}</span>
+                                ))}
+                              </div>
+                            )}
+                            {feedback.feedback?.custom_feedback && (
+                              <div className="text-sm text-foreground bg-card/80 rounded p-2 border border-border/50">
+                                {feedback.feedback.custom_feedback}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <FeedbackForm generationId={selectedBlueprint.id} onFeedbackSubmitted={() => setSelectedBlueprint(null)} />
+                        )}
+                      </div>
                     </div>
-                    <Button
-                      className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                      onClick={() => handleDownload(selectedBlueprint)}
-                      disabled={!selectedBlueprint.sd_image_url && !selectedBlueprint.layout_image_url}
-                    >
-                      <Download className="mr-2 h-4 w-4" />
-                      Descargar plano
-                    </Button>
                   </div>
                 </div>
               )}
@@ -655,6 +705,7 @@ export default function MyBlueprintsPage() {
           )}
         </>
       )}
+      </div>
     </div>
   )
 }

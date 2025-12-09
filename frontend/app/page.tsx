@@ -127,58 +127,67 @@ function GuestHome() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hero Section - Apple Style */}
+      {/* Hero Section - Architectural Style */}
       <section className="relative py-32 px-4 md:px-6 text-center bg-gradient-to-b from-background via-background to-muted/20 overflow-hidden">
-        {/* Background Pattern */}
-        <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
+        {/* Architectural Background Patterns */}
+        <div className="absolute inset-0 bg-arch-grid" />
+        <div className="absolute inset-0 arch-gradient-overlay" />
+        <div className="absolute inset-0 bg-arch-perspective" />
         <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5" />
         
+        {/* Decorative architectural lines */}
+        <div className="absolute top-20 left-10 w-32 h-px bg-primary/10 arch-line-animated" style={{ animationDelay: '0s' }} />
+        <div className="absolute top-40 right-20 w-24 h-px bg-primary/10 arch-line-animated" style={{ animationDelay: '2s' }} />
+        <div className="absolute bottom-32 left-1/4 w-40 h-px bg-primary/10 arch-line-animated" style={{ animationDelay: '4s' }} />
+        
         <div className="relative container mx-auto max-w-5xl">
-          <div className="mb-8">
-            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20">
+          <div className="mb-8 fade-in-up">
+            <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-primary/10 text-primary border border-primary/20 arch-shadow backdrop-blur-sm">
               <Sparkles className="w-4 h-4 mr-2" />
               Potenciado por IA
             </span>
           </div>
           
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent fade-in-up" style={{ animationDelay: '0.1s' }}>
             ArchIAtect
           </h1>
           
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed fade-in-up" style={{ animationDelay: '0.2s' }}>
             Genera bocetos de planos arquitectónicos en segundos. 
             <span className="text-foreground font-medium"> Diseño inteligente.</span>
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Button size="lg" className="text-lg px-8 py-6 h-auto" asChild>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16 fade-in-up" style={{ animationDelay: '0.3s' }}>
+            <Button size="lg" className="text-lg px-8 py-6 h-auto arch-shadow-lg hover:arch-shadow-lg transition-all duration-300" asChild>
               <Link href="/generator">
                 Crear Plano
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto" asChild>
+            <Button size="lg" variant="outline" className="text-lg px-8 py-6 h-auto arch-shadow hover:arch-shadow-lg transition-all duration-300" asChild>
               <Link href="/discover">Explorar Galería</Link>
             </Button>
           </div>
 
           {/* Carrusel de imágenes reales del backend */}
-          <div className="relative max-w-4xl mx-auto">
+          <div className="relative max-w-4xl mx-auto fade-in-up" style={{ animationDelay: '0.4s' }}>
             {carouselLoading ? (
-              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden flex items-center justify-center">
+              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-3xl border border-border/50 overflow-hidden flex items-center justify-center arch-shadow">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
               </div>
             ) : carouselImages.length > 0 ? (
-              <Carousel 
-                images={carouselImages}
-                autoPlay={true}
-                interval={4000}
-                showArrows={true}
-                showDots={true}
-                className="max-w-4xl mx-auto"
-              />
+              <div className="arch-shadow-lg rounded-3xl overflow-hidden">
+                <Carousel 
+                  images={carouselImages}
+                  autoPlay={true}
+                  interval={4000}
+                  showArrows={true}
+                  showDots={true}
+                  className="max-w-4xl mx-auto"
+                />
+              </div>
             ) : (
-              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-2xl border border-border/50 overflow-hidden flex items-center justify-center">
+              <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-3xl border border-border/50 overflow-hidden flex items-center justify-center arch-shadow">
                 <Building2 className="w-24 h-24 text-muted-foreground/30" />
               </div>
             )}
@@ -186,9 +195,10 @@ function GuestHome() {
         </div>
       </section>
 
-      {/* Features Section - Apple Style */}
-      <section className="py-24 px-4 md:px-6 bg-muted/30">
-        <div className="container mx-auto max-w-6xl">
+      {/* Features Section - Architectural Style */}
+      <section className="py-24 px-4 md:px-6 bg-muted/30 relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-grid opacity-20" />
+        <div className="container mx-auto max-w-6xl relative">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
               Diseño Arquitectónico
@@ -200,35 +210,35 @@ function GuestHome() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 arch-shadow transition-transform duration-300 group-hover:scale-110">
                 <Zap className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Generación Instantánea</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Describe tu visión y obtén planos arquitectónicos detallados en segundos. Nuestra IA entiende tus necesidades y las convierte en realidad.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-center p-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 arch-shadow transition-transform duration-300 group-hover:scale-110">
                 <Eye className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Galería Inspiradora</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Explora miles de planos generados por nuestra comunidad. Encuentra inspiración y descubre nuevas posibilidades para tus proyectos.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-center p-8">
-              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
+              <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-6 arch-shadow transition-transform duration-300 group-hover:scale-110">
                 <Users className="w-8 h-8 text-primary" />
               </div>
               <h3 className="text-2xl font-semibold mb-4">Comunidad Activa</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Únete a arquitectos, diseñadores y entusiastas que ya están transformando sus ideas en planos profesionales con ArchIAtect.
               </p>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -246,81 +256,87 @@ function GuestHome() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm group">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground arch-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 1
               </div>
               <h3 className="text-2xl font-semibold mb-4">Describe tu Proyecto</h3>
               <p className="text-muted-foreground">
                 Especifica el número de habitaciones, baños, cocina y otros espacios que necesitas. O simplemente describe tu visión en texto libre.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm group">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground arch-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 2
               </div>
               <h3 className="text-2xl font-semibold mb-4">IA Genera tu Plano</h3>
               <p className="text-muted-foreground">
                 Nuestra inteligencia artificial analiza tus especificaciones y crea un plano arquitectónico profesional optimizado para tus necesidades.
               </p>
-            </div>
+            </Card>
 
-            <div className="text-center">
-              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground">
+            <Card className="text-center p-8 card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm group">
+              <div className="w-20 h-20 bg-primary rounded-full flex items-center justify-center mx-auto mb-6 text-2xl font-bold text-primary-foreground arch-shadow-lg transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3">
                 3
               </div>
               <h3 className="text-2xl font-semibold mb-4">Descarga y Comparte</h3>
               <p className="text-muted-foreground">
                 Descarga tu plano en alta calidad, guárdalo en tu biblioteca personal y compártelo con la comunidad para inspirar a otros.
               </p>
-            </div>
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-24 px-4 md:px-6">
-        <div className="container mx-auto max-w-6xl">
+      {/* Stats Section - Architectural Style */}
+      <section className="py-24 px-4 md:px-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-perspective opacity-30" />
+        <div className="container mx-auto max-w-6xl relative">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-4">
+            <Card className="p-8 arch-shadow border-border/50 bg-card/50 backdrop-blur-sm card-3d group">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-4 transition-all duration-300 group-hover:scale-110">
                 {publicStats ? publicStats.total_generations.toLocaleString() : '...'}
               </div>
-              <p className="text-xl text-muted-foreground">Planos Generados</p>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-4">
+              <p className="text-xl text-muted-foreground font-medium">Planos Generados</p>
+              <div className="mt-4 h-1 w-16 bg-primary/20 rounded-full mx-auto group-hover:w-24 transition-all duration-300" />
+            </Card>
+            <Card className="p-8 arch-shadow border-border/50 bg-card/50 backdrop-blur-sm card-3d group">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-4 transition-all duration-300 group-hover:scale-110">
                 {publicStats ? publicStats.total_users.toLocaleString() : '...'}
               </div>
-              <p className="text-xl text-muted-foreground">Usuarios Registrados</p>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold text-primary mb-4">
+              <p className="text-xl text-muted-foreground font-medium">Usuarios Registrados</p>
+              <div className="mt-4 h-1 w-16 bg-primary/20 rounded-full mx-auto group-hover:w-24 transition-all duration-300" />
+            </Card>
+            <Card className="p-8 arch-shadow border-border/50 bg-card/50 backdrop-blur-sm card-3d group">
+              <div className="text-4xl md:text-5xl font-bold text-primary mb-4 transition-all duration-300 group-hover:scale-110">
                 {publicStats ? `${publicStats.success_rate}%` : '...'}
               </div>
-              <p className="text-xl text-muted-foreground">Tasa de Éxito</p>
-            </div>
+              <p className="text-xl text-muted-foreground font-medium">Tasa de Éxito</p>
+              <div className="mt-4 h-1 w-16 bg-primary/20 rounded-full mx-auto group-hover:w-24 transition-all duration-300" />
+            </Card>
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Apple Style */}
-      <section className="py-32 px-4 md:px-6 bg-primary text-primary-foreground">
-        <div className="container mx-auto text-center max-w-4xl">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+      {/* CTA Section - Architectural Style */}
+      <section className="py-32 px-4 md:px-6 bg-primary text-primary-foreground relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-grid opacity-10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary to-primary/95" />
+        <div className="container mx-auto text-center max-w-4xl relative z-10">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 fade-in-up">
             Comienza a Crear Hoy
           </h2>
-          <p className="text-xl md:text-2xl mb-12 opacity-90 leading-relaxed">
+          <p className="text-xl md:text-2xl mb-12 opacity-90 leading-relaxed fade-in-up" style={{ animationDelay: '0.1s' }}>
             Únete a la revolución del diseño arquitectónico. 
             <br />
             Tu próximo proyecto está a solo unos clics de distancia.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto" asChild>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center fade-in-up" style={{ animationDelay: '0.2s' }}>
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto arch-shadow-lg hover:scale-105 transition-transform duration-300" asChild>
               <Link href="/register">Crear Cuenta Gratis</Link>
             </Button>
-            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto bg-white text-primary hover:bg-gray-100" asChild>
+            <Button size="lg" variant="secondary" className="text-lg px-8 py-6 h-auto bg-white text-primary hover:bg-gray-100 arch-shadow-lg hover:scale-105 transition-transform duration-300" asChild>
               <Link href="/generator">Probar Ahora</Link>
             </Button>
           </div>
@@ -467,10 +483,11 @@ function AuthenticatedHome() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Welcome Hero Section */}
-      <section className="py-16 px-4 md:px-6 bg-gradient-to-b from-background to-muted/20">
-        <div className="container mx-auto max-w-6xl">
+      <section className="py-16 px-4 md:px-6 bg-gradient-to-b from-background to-muted/20 relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-grid opacity-20" />
+        <div className="container mx-auto max-w-6xl relative">
           <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-8 md:mb-0">
+            <div className="mb-8 md:mb-0 fade-in-up">
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
                 ¡Hola, {user?.name || 'Arquitecto'}! 👋
               </h1>
@@ -478,19 +495,19 @@ function AuthenticatedHome() {
                 ¿Listo para crear tu próximo plano arquitectónico?
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="text-lg px-6 py-3 h-auto" asChild>
+                <Button size="lg" className="text-lg px-6 py-3 h-auto arch-shadow-lg hover:scale-105 transition-transform duration-300" asChild>
                   <Link href="/generator">
                     <Plus className="mr-2 h-5 w-5" />
                     Crear Nuevo Plano
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" className="text-lg px-6 py-3 h-auto" asChild>
+                <Button size="lg" variant="outline" className="text-lg px-6 py-3 h-auto arch-shadow hover:arch-shadow-lg transition-all duration-300" asChild>
                   <Link href="/discover">Explorar Galería</Link>
                 </Button>
               </div>
             </div>
-            <div className="text-center md:text-right">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20">
+            <div className="text-center md:text-right fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 arch-shadow backdrop-blur-sm">
                 <Sparkles className="w-4 h-4 mr-2" />
                 {stats?.total_blueprints || 0} planos creados
               </div>
@@ -503,7 +520,7 @@ function AuthenticatedHome() {
       <section className="py-8 px-4 md:px-6">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
+            <Card className="card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Planos</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -516,7 +533,7 @@ function AuthenticatedHome() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Recientes</CardTitle>
                 <Clock className="h-4 w-4 text-muted-foreground" />
@@ -529,7 +546,7 @@ function AuthenticatedHome() {
               </CardContent>
             </Card>
 
-            <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" asChild>
+            <Card className="cursor-pointer card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm" asChild>
               <Link href="/favourites">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Favoritos</CardTitle>
@@ -544,7 +561,7 @@ function AuthenticatedHome() {
               </Link>
             </Card>
 
-            <Card>
+            <Card className="card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Tasa de Éxito</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -573,7 +590,7 @@ function AuthenticatedHome() {
           {stats?.recent_blueprints && stats.recent_blueprints.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {stats.recent_blueprints.map((blueprint) => (
-                <Card key={blueprint.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300">
+                <Card key={blueprint.id} className="overflow-hidden group cursor-pointer card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
                   <div className="aspect-[4/3] bg-gradient-to-br from-muted to-muted/50 relative overflow-hidden">
                     {blueprint.sd_image_url || blueprint.layout_image_url ? (
                       <>
@@ -648,10 +665,10 @@ function AuthenticatedHome() {
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-3xl font-bold mb-8 text-center">Acciones Rápidas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" asChild>
+            <Card className="group cursor-pointer card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm" asChild>
               <Link href="/generator">
                 <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 arch-shadow transition-transform duration-300 group-hover:scale-110">
                     <Plus className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Crear Nuevo Plano</h3>
@@ -662,10 +679,10 @@ function AuthenticatedHome() {
               </Link>
             </Card>
 
-            <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" asChild>
+            <Card className="group cursor-pointer card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm" asChild>
               <Link href="/discover">
                 <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 arch-shadow transition-transform duration-300 group-hover:scale-110">
                     <Eye className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Explorar Galería</h3>
@@ -676,10 +693,10 @@ function AuthenticatedHome() {
               </Link>
             </Card>
 
-            <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300" asChild>
+            <Card className="group cursor-pointer card-3d arch-shadow border-border/50 bg-card/50 backdrop-blur-sm" asChild>
               <Link href="/my-blueprints">
                 <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 arch-shadow transition-transform duration-300 group-hover:scale-110">
                     <BarChart3 className="w-8 h-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Mis Planos</h3>

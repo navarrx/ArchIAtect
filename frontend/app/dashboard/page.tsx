@@ -129,17 +129,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Header Section - Apple Style */}
-      <section className="py-16 px-4 md:px-6">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+      {/* Header Section */}
+      <section className="py-16 px-4 md:px-6 relative z-10">
         <div className="container mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center shadow-2xl">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center arch-shadow-lg">
                   <BarChart3 className="h-10 w-10 text-primary-foreground" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-background rounded-full flex items-center justify-center arch-shadow">
                   <Shield className="h-4 w-4 text-primary" />
                 </div>
               </div>
@@ -156,11 +158,11 @@ export default function DashboardPage() {
 
           {/* Key Metrics */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-12">
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">Total Usuarios</CardTitle>
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-2xl flex items-center justify-center">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -172,11 +174,11 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">Total Generaciones</CardTitle>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500/10 to-purple-500/20 rounded-2xl flex items-center justify-center">
-                  <Zap className="h-6 w-6 text-purple-600" />
+                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-primary" />
                 </div>
               </CardHeader>
               <CardContent>
@@ -188,10 +190,10 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">Errores Frecuentes</CardTitle>
-                <div className="w-12 h-12 bg-gradient-to-br from-red-500/10 to-red-500/20 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center">
                   <AlertCircle className="h-6 w-6 text-red-600" />
                 </div>
               </CardHeader>
@@ -216,10 +218,10 @@ export default function DashboardPage() {
             </Card>
 
             {/* Promedio de Rating */}
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle className="text-sm font-medium">Promedio de Rating</CardTitle>
-                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400/10 to-yellow-400/20 rounded-2xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-yellow-400/10 rounded-2xl flex items-center justify-center">
                   <Star className="h-6 w-6 text-yellow-500" />
                 </div>
               </CardHeader>
@@ -237,7 +239,7 @@ export default function DashboardPage() {
 
           {/* Charts */}
           <div className="grid gap-6 md:grid-cols-3 mb-12">
-            <Card className="md:col-span-2 border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="md:col-span-2 arch-shadow border-border/50 bg-card/70">
               <CardHeader className="pb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center">
@@ -248,40 +250,47 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={stats?.generations_by_day}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                      <XAxis 
-                        dataKey="date" 
-                        tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
-                        stroke="rgba(0,0,0,0.5)"
-                      />
-                      <YAxis stroke="rgba(0,0,0,0.5)" />
-                      <Tooltip 
-                        labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
-                        contentStyle={{
-                          backgroundColor: 'rgba(255,255,255,0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-                        }}
-                      />
-                      <Legend />
-                      <Line 
-                        type="monotone" 
-                        dataKey="count" 
-                        stroke="#8884d8" 
-                        strokeWidth={3}
-                        name="Generaciones"
-                        dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {stats?.generations_by_day && stats.generations_by_day.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={stats.generations_by_day || []}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                        <XAxis 
+                          dataKey="date" 
+                          tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
+                          stroke="rgba(0,0,0,0.5)"
+                        />
+                        <YAxis stroke="rgba(0,0,0,0.5)" allowDecimals={false} />
+                        <Tooltip 
+                          labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
+                          contentStyle={{
+                            backgroundColor: 'rgba(255,255,255,0.95)',
+                            border: 'none',
+                            borderRadius: '12px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                          }}
+                        />
+                        <Legend />
+                        <Line 
+                          type="monotone" 
+                          dataKey="count" 
+                          stroke="#8884d8" 
+                          strokeWidth={3}
+                          name="Generaciones"
+                          dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
+                          isAnimationActive={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                      Sin datos de generaciones para mostrar
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="pb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-xl flex items-center justify-center">
@@ -325,7 +334,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="md:col-span-3 border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="md:col-span-3 arch-shadow border-border/50 bg-card/70">
               <CardHeader className="pb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-orange-500/10 to-orange-500/20 rounded-xl flex items-center justify-center">
@@ -360,7 +369,7 @@ export default function DashboardPage() {
 
           {/* Latest Data Tables */}
           <div className="grid gap-6 md:grid-cols-2">
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="pb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-xl flex items-center justify-center">
@@ -403,7 +412,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-xl bg-background/50 backdrop-blur-sm">
+            <Card className="arch-shadow border-border/50 bg-card/70">
               <CardHeader className="pb-6">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-green-500/10 to-green-500/20 rounded-xl flex items-center justify-center">

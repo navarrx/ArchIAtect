@@ -100,6 +100,121 @@ body {
     linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
 }
 
+/* Architectural grid pattern - more visible */
+.bg-arch-grid {
+  background-image: 
+    linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+}
+
+.dark .bg-arch-grid {
+  background-image: 
+    linear-gradient(hsl(var(--border)) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
+  opacity: 0.2;
+}
+
+/* Architectural perspective lines */
+.bg-arch-perspective {
+  background-image: 
+    linear-gradient(to bottom right, transparent 0%, hsl(var(--primary)/0.03) 50%, transparent 100%),
+    linear-gradient(to bottom left, transparent 0%, hsl(var(--primary)/0.03) 50%, transparent 100%);
+  background-size: 100% 100%;
+}
+
+/* Card 3D effect - Optimizado para mejor rendimiento */
+.card-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.card-3d:hover {
+  transform: translateY(-4px) translateZ(0);
+  box-shadow: 0 12px 24px -8px hsl(var(--primary)/0.12);
+}
+
+/* Optimización para scroll performance */
+.scroll-optimized {
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  content-visibility: auto;
+  contain-intrinsic-size: 400px;
+}
+
+/* Optimización adicional para contenido fuera de vista */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 400px;
+}
+
+/* Optimización para imágenes en scroll */
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+/* Architectural shadow */
+.arch-shadow {
+  box-shadow: 
+    0 4px 6px -1px hsl(var(--primary)/0.1),
+    0 2px 4px -1px hsl(var(--primary)/0.06),
+    0 0 0 1px hsl(var(--border)/0.5);
+}
+
+.arch-shadow-lg {
+  box-shadow: 
+    0 20px 25px -5px hsl(var(--primary)/0.1),
+    0 10px 10px -5px hsl(var(--primary)/0.04),
+    0 0 0 1px hsl(var(--border)/0.5);
+}
+
+/* Gradient architectural overlay */
+.arch-gradient-overlay {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary)/0.02) 0%,
+    transparent 50%,
+    hsl(var(--primary)/0.02) 100%
+  );
+}
+
+/* Animated architectural lines */
+@keyframes arch-line {
+  0%, 100% {
+    opacity: 0.2;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 0.4;
+    transform: translateX(10px);
+  }
+}
+
+.arch-line-animated {
+  animation: arch-line 8s ease-in-out infinite;
+}
+
+/* Smooth fade in */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
 /* Line clamp utilities */
 .line-clamp-1 {
   overflow: hidden;

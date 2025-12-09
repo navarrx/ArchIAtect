@@ -5,27 +5,31 @@ import { Sparkles, Building2 } from "lucide-react"
 
 export default function GeneratorPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Header Section - Apple Style */}
-      <section className="py-16 px-4 md:px-6">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 relative overflow-hidden">
+      {/* Architectural Background Patterns */}
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+      
+      {/* Header Section - Architectural Style */}
+      <section className="py-16 px-4 md:px-6 relative z-10">
         <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 fade-in-up">
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
-                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center shadow-2xl">
+                <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-3xl flex items-center justify-center arch-shadow-lg">
                   <Building2 className="h-10 w-10 text-primary-foreground" />
                 </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-background rounded-full flex items-center justify-center arch-shadow">
                   <Sparkles className="h-4 w-4 text-primary" />
                 </div>
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground via-foreground/90 to-foreground/70 bg-clip-text text-transparent fade-in-up" style={{ animationDelay: '0.1s' }}>
               Generador de Planos
             </h1>
             
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed fade-in-up" style={{ animationDelay: '0.2s' }}>
               Ajusta los parámetros a continuación para personalizar tu plano arquitectónico. 
               <span className="text-foreground font-medium"> Nuestra IA generará un boceto basado en tus especificaciones.</span>
             </p>
