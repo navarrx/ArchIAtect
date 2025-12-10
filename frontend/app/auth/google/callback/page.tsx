@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect } from "react"
+import { Suspense, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth.tsx"
 
-export default function GoogleCallback() {
+function GoogleCallbackInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { checkAuth } = useAuth()
@@ -59,4 +59,19 @@ export default function GoogleCallback() {
       </div>
     </div>
   )
-} 
+}
+
+export default function GoogleCallback() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-semibold mb-4">Autenticando con Google...</h1>
+          <p className="text-muted-foreground">Por favor espera mientras completamos tu inicio de sesión.</p>
+        </div>
+      </div>
+    }>
+      <GoogleCallbackInner />
+    </Suspense>
+  )
+}
