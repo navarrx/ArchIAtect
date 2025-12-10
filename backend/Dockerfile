@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 WORKDIR /app/
 
@@ -9,9 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install dependencies
+# PIP config to speed up installs and avoid cache bloat
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_EXTRA_INDEX_URL=https://download.pytorch.org/whl/cpu
+
+# Copy requirements and install heavy deps first (CPU wheels)
 COPY ./requirements.txt /app/
-RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN pip install --prefer-binary torch==2.2.0 torchvision==0.17.0 --extra-index-url https://download.pytorch.org/whl/cpu && \
+    pip install --prefer-binary --upgrade -r requirements.txt
 
 # Copy application code
 COPY ./app /app/app
