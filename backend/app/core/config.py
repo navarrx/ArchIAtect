@@ -2,8 +2,8 @@ import os
 import secrets
 from dotenv import load_dotenv
 from typing import Any, Dict, List, Optional, Union
-from pydantic import AnyHttpUrl, validator
-from pydantic_settings import BaseSettings
+from pydantic import AnyHttpUrl, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Cargar el archivo .env desde la raíz del proyecto
 dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), ".env")
@@ -54,12 +54,13 @@ class Settings(BaseSettings):
     GPU_SERVICE_TOKEN: Optional[str] = None
     GPU_REQUEST_TIMEOUT: int = 120  # seconds
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file=".env")
 
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
-        if isinstance(v, str):
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[str, List[str]]:
+        if isinstance(v, str) and not v.startswith("["):
+            # Parse comma-separated string
             return [i.strip() for i in v.split(",") if i.strip()]
         return v
 
