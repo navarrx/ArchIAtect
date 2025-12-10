@@ -59,8 +59,8 @@ export default function BlueprintDiscover() {
       observer.current = new IntersectionObserver(
         entries => {
           if (entries[0].isIntersecting && hasMore && !loading) {
-            setPage(prevPage => prevPage + 1)
-          }
+        setPage(prevPage => prevPage + 1)
+      }
         },
         {
           rootMargin: '200px', // Cargar antes de llegar al final
@@ -85,24 +85,24 @@ export default function BlueprintDiscover() {
 
       setBlueprints(prev => {
         let updated: Blueprint[]
-        
-        if (reset) {
+
+      if (reset) {
           updated = newBlueprints
-        } else {
+      } else {
           updated = [...prev, ...newBlueprints]
-        }
-        
-        // Para usuarios no autenticados, limitar el total de planos mostrados
+      }
+
+      // Para usuarios no autenticados, limitar el total de planos mostrados
         if (!isAuthenticated) {
           if (updated.length >= MAX_BLUEPRINTS_GUEST) {
-            setHasMore(false)
+        setHasMore(false)
             return updated.slice(0, MAX_BLUEPRINTS_GUEST)
           }
           // Si aún no alcanzamos el límite pero no hay más resultados
           setHasMore(newBlueprints.length === PAGE_SIZE && updated.length < MAX_BLUEPRINTS_GUEST)
-        } else {
-          setHasMore(newBlueprints.length === PAGE_SIZE)
-        }
+      } else {
+        setHasMore(newBlueprints.length === PAGE_SIZE)
+      }
         
         return updated
       })
@@ -444,8 +444,8 @@ export default function BlueprintDiscover() {
                   <div className="p-3 rounded-xl bg-card border border-border/50 arch-shadow">
                     <p className="text-xs text-muted-foreground mb-1">Creado</p>
                     <p className="text-sm font-semibold">
-                      {new Date(selectedBlueprint.created_at).toLocaleDateString()}
-                    </p>
+                    {new Date(selectedBlueprint.created_at).toLocaleDateString()}
+                  </p>
                   </div>
                 </div>
 

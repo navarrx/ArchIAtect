@@ -177,14 +177,14 @@ function GuestHome() {
               </div>
             ) : carouselImages.length > 0 ? (
               <div className="arch-shadow-lg rounded-3xl overflow-hidden">
-                <Carousel 
-                  images={carouselImages}
-                  autoPlay={true}
-                  interval={4000}
-                  showArrows={true}
-                  showDots={true}
-                  className="max-w-4xl mx-auto"
-                />
+              <Carousel 
+                images={carouselImages}
+                autoPlay={true}
+                interval={4000}
+                showArrows={true}
+                showDots={true}
+                className="max-w-4xl mx-auto"
+              />
               </div>
             ) : (
               <div className="aspect-video bg-gradient-to-br from-muted/50 to-muted rounded-3xl border border-border/50 overflow-hidden flex items-center justify-center arch-shadow">

@@ -251,36 +251,36 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="h-[300px]">
                   {stats?.generations_by_day && stats.generations_by_day.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={stats.generations_by_day || []}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
-                        <XAxis 
-                          dataKey="date" 
-                          tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
-                          stroke="rgba(0,0,0,0.5)"
-                        />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.1)" />
+                      <XAxis 
+                        dataKey="date" 
+                        tickFormatter={(date) => format(new Date(date), 'dd/MM', { locale: es })}
+                        stroke="rgba(0,0,0,0.5)"
+                      />
                         <YAxis stroke="rgba(0,0,0,0.5)" allowDecimals={false} />
-                        <Tooltip 
-                          labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
-                          contentStyle={{
-                            backgroundColor: 'rgba(255,255,255,0.95)',
-                            border: 'none',
-                            borderRadius: '12px',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-                          }}
-                        />
-                        <Legend />
-                        <Line 
-                          type="monotone" 
-                          dataKey="count" 
-                          stroke="#8884d8" 
-                          strokeWidth={3}
-                          name="Generaciones"
-                          dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
+                      <Tooltip 
+                        labelFormatter={(date) => format(new Date(date), 'dd/MM/yyyy', { locale: es })}
+                        contentStyle={{
+                          backgroundColor: 'rgba(255,255,255,0.95)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                        }}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="count" 
+                        stroke="#8884d8" 
+                        strokeWidth={3}
+                        name="Generaciones"
+                        dot={{ fill: '#8884d8', strokeWidth: 2, r: 4 }}
                           isAnimationActive={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                       Sin datos de generaciones para mostrar

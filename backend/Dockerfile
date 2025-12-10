@@ -19,13 +19,16 @@ COPY ./alembic.ini /app/alembic.ini
 COPY ./alembic /app/alembic
 
 # Create uploads directory
-RUN mkdir -p /app/uploads
-RUN mkdir -p /app/uploads/generated
-RUN mkdir -p /app/uploads/generated/thumbnails
-RUN mkdir -p /app/uploads/uploads
+RUN mkdir -p /app/uploads \
+    /app/uploads/generated \
+    /app/uploads/generated/thumbnails \
+    /app/uploads/uploads
 
 # Set environment variables
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
 
-# Run the application with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run the application with uvicorn (Railway provides $PORT)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

@@ -41,7 +41,7 @@ export default function BlueprintGenerator() {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/generate`, {
         prompt,
       })
-
+      
       if (!response.data.layout_image_url) {
         throw new Error("No layout image URL received from server")
       }
@@ -68,13 +68,13 @@ export default function BlueprintGenerator() {
 
   // Memoize room configuration
   const roomConfig = useMemo(() => [
-    { name: "bedroom", label: "bedroom" },
-    { name: "bathroom", label: "bathroom" },
-    { name: "kitchen", label: "kitchen" },
-    { name: "livingRoom", label: "living room" },
-    { name: "diningRoom", label: "dining room" },
-    { name: "garage", label: "garage" },
-    { name: "laundryRoom", label: "laundry room" },
+      { name: "bedroom", label: "bedroom" },
+      { name: "bathroom", label: "bathroom" },
+      { name: "kitchen", label: "kitchen" },
+      { name: "livingRoom", label: "living room" },
+      { name: "diningRoom", label: "dining room" },
+      { name: "garage", label: "garage" },
+      { name: "laundryRoom", label: "laundry room" },
   ], [])
 
   // Handler para formulario "With Parameters"
@@ -107,8 +107,8 @@ export default function BlueprintGenerator() {
     const prompt = formData.get("prompt") as string
 
     if (prompt.trim()) {
-      handleGenerate(prompt)
-    }
+    handleGenerate(prompt)
+  }
   }, [handleGenerate])
 
   if (isLoading) {

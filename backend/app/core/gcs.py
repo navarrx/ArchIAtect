@@ -1,5 +1,8 @@
 from google.cloud import storage
+import base64
+import json
 import os
+import tempfile
 import uuid
 from dotenv import load_dotenv
 
@@ -11,11 +14,51 @@ bucket_name = os.getenv("GCS_BUCKET_NAME")
 if not bucket_name:
     raise ValueError("GCS_BUCKET_NAME environment variable is not set")
 
-# Configurar la ruta correcta a las credenciales
-credentials_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
-                              "secrets", 
-                              "archiatect-eda217aa21c8.json")
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
+# Intentar configurar credenciales de forma flexible (Railway/local)
+credentials_env = os.getenv("GCS_CREDENTIALS_JSON")
+credentials_file = os.getenv("GCS_CREDENTIALS_FILE")
+default_credentials_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+    "secrets",
+    "archiatect-eda217aa21c8.json",
+)
+
+def _ensure_credentials_file() -> str:
+    """
+    Ensure Google credentials are available and return the file path.
+    Priority:
+    1) GCS_CREDENTIALS_JSON (raw JSON or base64)
+    2) GCS_CREDENTIALS_FILE (explicit path)
+    3) default file in secrets/
+    """
+    if credentials_env:
+        try:
+            # Detect base64 vs raw JSON
+            try:
+                decoded = base64.b64decode(credentials_env).decode("utf-8")
+                json.loads(decoded)
+                content = decoded
+            except Exception:
+                json.loads(credentials_env)  # raises if invalid
+                content = credentials_env
+
+            fd, path = tempfile.mkstemp(prefix="gcs-creds-", suffix=".json")
+            with os.fdopen(fd, "w") as tmp:
+                tmp.write(content)
+            return path
+        except Exception as exc:
+            raise ValueError(f"Invalid GCS_CREDENTIALS_JSON: {exc}") from exc
+
+    if credentials_file and os.path.isfile(credentials_file):
+        return credentials_file
+
+    if os.path.isfile(default_credentials_path):
+        return default_credentials_path
+
+    raise ValueError("No valid Google Cloud credentials found. Set GCS_CREDENTIALS_JSON or GCS_CREDENTIALS_FILE.")
+
+# Configurar GOOGLE_APPLICATION_CREDENTIALS
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = _ensure_credentials_file()
 
 try:
     # Crear el cliente usando las credenciales configuradas

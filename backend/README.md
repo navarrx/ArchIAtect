@@ -25,11 +25,13 @@ pip install -r requirements.txt
 Crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
 ```env
-# Database
+# Database (opción 1: variables individuales)
 POSTGRES_SERVER=localhost
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=your_password
 POSTGRES_DB=archi_atect
+# Database (opción 2: URL completa, ideal para Railway)
+# DATABASE_URL=postgresql://user:pass@host:port/dbname
 
 # Security
 SECRET_KEY=your_secret_key
@@ -43,7 +45,50 @@ GOOGLE_REDIRECT_URI=http://localhost:3000/auth/google/callback
 # Optional: Superuser
 FIRST_SUPERUSER=admin@example.com
 FIRST_SUPERUSER_PASSWORD=admin_password
+
+# CORS (separar por coma)
+BACKEND_CORS_ORIGINS=http://localhost:3000,https://tu-frontend.railway.app
+
+# Almacenamiento GCS
+GCS_BUCKET_NAME=tu-bucket
+# Credenciales: JSON o base64 del JSON (recomendado para Railway)
+# GCS_CREDENTIALS_JSON='{"type": "..."}'   # o en base64
+# Alternativa: ruta a archivo local
+# GCS_CREDENTIALS_FILE=/path/to/creds.json
+
+# GPU remoto/local (Railway usa modo remote)
+GPU_MODE=remote           # remote | local
+GPU_SERVICE_URL=https://tu-tunel.example.com
+GPU_SERVICE_TOKEN=token_seguro_compartido
+GPU_REQUEST_TIMEOUT=120   # segundos
 ```
+
+## Despliegue en Railway (backend)
+
+1. Crear servicio Postgres y copiar `DATABASE_URL`.
+2. Crear servicio Backend desde este directorio (`backend/`) usando el Dockerfile.
+3. Variables en Railway:
+   - `DATABASE_URL`, `SECRET_KEY`, `GOOGLE_CLIENT_ID/SECRET`, `GCS_*`,
+     `BACKEND_CORS_ORIGINS` con el dominio del frontend,
+     `GPU_MODE=remote`, `GPU_SERVICE_URL`, `GPU_SERVICE_TOKEN`.
+4. Release phase (sugerido): `alembic upgrade head`.
+5. Healthcheck: GET `/` o `/api/v1/users/me` con auth.
+
+## Servicio GPU local + túnel
+
+1. Instala dependencias (con GPU) y arranca el servicio:
+```bash
+uvicorn app.gpu_service.main:app --host 0.0.0.0 --port 8001
+# Variables: GPU_ENABLE_SD=true/false, GPU_SERVICE_TOKEN=token
+```
+2. Crea el túnel seguro (ejemplos):
+   - Cloudflare: `cloudflared tunnel run --url http://localhost:8001 --hostname gpu-demo.tu-dominio.com`
+   - Ngrok: `ngrok http 8001 --authtoken <token>`
+3. Configura en Railway:
+   - `GPU_SERVICE_URL` con la URL pública del túnel.
+   - `GPU_SERVICE_TOKEN` igual al usado localmente.
+   - `GPU_MODE=remote`.
+4. Reinicia el backend en Railway para tomar la URL.
 
 4. Configurar Google OAuth:
    - Ir a [Google Cloud Console](https://console.cloud.google.com)

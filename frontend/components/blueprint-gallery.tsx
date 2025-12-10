@@ -62,17 +62,17 @@ export default function BlueprintGallery() {
         <div className="flex items-center justify-between">
           <Skeleton className="h-8 w-64" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {[...Array(5)].map((_, index) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {[...Array(5)].map((_, index) => (
             <Card key={index} className="rounded-2xl overflow-hidden arch-shadow border-border/50 bg-card/50 backdrop-blur-sm">
-              <Skeleton className="h-64 w-full" />
-              <div className="p-6">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
+            <Skeleton className="h-64 w-full" />
+            <div className="p-6">
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
             </Card>
           ))}
-        </div>
+          </div>
       </div>
     )
   }
@@ -104,8 +104,8 @@ export default function BlueprintGallery() {
       </div>
 
       {/* Grid de planos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blueprints.map((blueprint, index) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {blueprints.map((blueprint, index) => (
           <Card 
             key={blueprint.id || index}
             className="group overflow-hidden rounded-2xl arch-shadow border-border/50 bg-card/50 backdrop-blur-sm card-3d"
