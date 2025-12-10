@@ -5,6 +5,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
 from app.core.security import create_access_token
+from app.core.exceptions import UserNotFoundError
 from app.schemas.token import Token
 from app.schemas.user import UserUpdate
 from app.services.user_service import authenticate_user, UserService
