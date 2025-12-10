@@ -1,4 +1,4 @@
-# Etapa de construcción
+# Etapa de construcción - force clean rebuild v3
 FROM node:18-alpine AS builder
 
 WORKDIR /app
@@ -12,9 +12,10 @@ COPY . .
 
 # Build-time env for Next.js - create .env.production for the build
 # Using production URL directly (this is a public URL, not a secret)
-RUN echo "NEXT_PUBLIC_API_URL=https://archiatect-backend-production.up.railway.app" > .env.production
+RUN echo "NEXT_PUBLIC_API_URL=https://archiatect-backend-production.up.railway.app" > .env.production && cat .env.production
 
-RUN npm run build
+# Force cache invalidation and rebuild
+RUN rm -rf .next && npm run build
 
 # Etapa de producción
 FROM node:18-alpine AS runner
