@@ -5,6 +5,10 @@ WORKDIR /app
 
 COPY package.json package-lock.json* ./
 
+# Build-time env for Next.js (needs to be set by Railway env vars)
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
 # Instalar forzando dependencias antiguas
 RUN npm install --legacy-peer-deps
 

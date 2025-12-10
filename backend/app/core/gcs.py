@@ -19,7 +19,7 @@ credentials_env = os.getenv("GCS_CREDENTIALS_JSON")
 credentials_file = os.getenv("GCS_CREDENTIALS_FILE")
 default_credentials_path = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-    "secrets",
+                              "secrets", 
     "archiatect-eda217aa21c8.json",
 )
 

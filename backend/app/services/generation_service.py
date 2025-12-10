@@ -101,7 +101,7 @@ def generate_floorplan(db: Session, user_id: int, prompt: str) -> GenerationResp
         raise ValueError("Prompt cannot be empty")
 
     logger.info(f"🚀 Generating floor plan for user {user_id} with prompt: {prompt}")
-
+    
     mode = settings.GPU_MODE.lower()
     layout_path: str
     sd_path: Optional[str]
