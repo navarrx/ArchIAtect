@@ -11,9 +11,8 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build-time env for Next.js - create .env.production for the build
-ARG NEXT_PUBLIC_API_URL
-RUN echo "NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}" > .env.production
-RUN cat .env.production
+# Using production URL directly (this is a public URL, not a secret)
+RUN echo "NEXT_PUBLIC_API_URL=https://archiatect-backend-production.up.railway.app" > .env.production
 
 RUN npm run build
 

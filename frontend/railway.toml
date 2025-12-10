@@ -1,7 +1,0 @@
-[build]
-builder = "dockerfile"
-dockerfilePath = "Dockerfile"
-
-[build.args]
-NEXT_PUBLIC_API_URL = "${{NEXT_PUBLIC_API_URL}}"
-
