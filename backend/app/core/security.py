@@ -39,14 +39,25 @@ def create_access_token(
     return encoded_jwt
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    # bcrypt has a 72 byte limit, truncate if necessary (same as when hashing)
-    password_bytes = plain_password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
-    return pwd_context.verify(password_bytes, hashed_password)
+def _normalize_password(password: Any) -> str:
+    """
+    Ensure we always hash/verify a plain string (not a pydantic model).
+    Also truncate to 72 bytes to satisfy bcrypt limits.
+    """
+    # If someone passed a Pydantic model (e.g., UserCreate), extract the field
+    if hasattr(password, "password"):
+        password = getattr(password, "password")
+    if not isinstance(password, str):
+        raise ValueError("Invalid password type")
+    # bcrypt has a 72 byte limit; truncate safely
+    return password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
 
 
-def get_password_hash(password: str) -> str:
-    # bcrypt has a 72 byte limit, truncate if necessary
-    # Encode to bytes to properly handle unicode characters
-    password_bytes = password.encode('utf-8')[:72].decode('utf-8', errors='ignore')
-    return pwd_context.hash(password_bytes)
+def verify_password(plain_password: Any, hashed_password: str) -> bool:
+    password_str = _normalize_password(plain_password)
+    return pwd_context.verify(password_str, hashed_password)
+
+
+def get_password_hash(password: Any) -> str:
+    password_str = _normalize_password(password)
+    return pwd_context.hash(password_str)
