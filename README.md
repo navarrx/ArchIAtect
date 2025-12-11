@@ -1,275 +1,151 @@
 # ArchIAtect 🏗️
 
-[English](#english) | [Español](#español)
-
-## English
-
-### Project Overview
-ArchIAtect is an innovative architectural design tool that leverages artificial intelligence to generate floor plan sketches. This project was developed as a thesis project for the Computer Engineering degree at Universidad de Mendoza, Argentina.
-
-### Features
-- AI-powered floor plan generation using state-of-the-art diffusion models
-- User authentication and project management
-- Responsive and modern UI
-- RESTful API architecture
-- Secure file handling and storage
-
-### Tech Stack
-#### Frontend
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- Radix UI Components
-- Framer Motion for animations
-- React Hook Form for form management
-
-#### Backend
-- FastAPI
-- Python
-- SQLAlchemy
-- Alembic for database migrations
-- JWT Authentication
-- Docker support
-- AI/ML Dependencies:
-  - PyTorch
-  - Diffusers
-  - Transformers
-  - Accelerate
-  - PEFT
-  - SpaCy
-  - NetworkX
-  - Matplotlib
-
-### Getting Started
-
-#### Prerequisites
-- Node.js (v18 or higher)
-- Python 3.8+
-- Docker (optional)
-- CUDA-compatible GPU (recommended for AI model inference)
-- PostgreSQL database
-- Google Cloud Storage account (for file storage)
-
-#### Environment Setup
-
-1. Frontend Environment (.env in frontend directory):
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-2. Backend Environment (.env in backend directory):
-```bash
-# API Configuration
-SECRET_KEY=your_secret_key_here
-BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8080"]
-
-# PostgreSQL Database
-POSTGRES_SERVER=localhost
-POSTGRES_USER=your_db_user
-POSTGRES_PASSWORD=your_db_password
-POSTGRES_DB=floor_plan_generator
-
-# PgAdmin (optional)
-PGADMIN_DEFAULT_EMAIL=your_email
-PGADMIN_DEFAULT_PASSWORD=your_password
-
-# Initial superuser (optional)
-FIRST_SUPERUSER=your_email
-FIRST_SUPERUSER_PASSWORD=your_password
-
-# Google Cloud Storage
-GOOGLE_APPLICATION_CREDENTIALS=backend/secrets/your-credentials.json
-GCS_BUCKET_NAME=your-bucket-name
-```
-
-3. Google Cloud Storage Setup:
-   - Create a Google Cloud Storage bucket
-   - Create a service account and download the credentials JSON file
-   - Create a `secrets` directory in the backend folder
-   - Place the credentials JSON file in the `backend/secrets` directory
-   - Add `secrets/` to your `.gitignore` file
-
-#### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/navarrx/ArchIAtect.git
-cd ArchIAtect
-```
-
-2. Frontend Setup:
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-3. Backend Setup:
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python -m app.main
-```
-
-4. Access the application:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Documentation: http://localhost:8000/docs
-
-### Project Structure
-```
-ArchIAtect/
-├── frontend/          # Next.js frontend application
-├── backend/           # FastAPI backend application
-│   ├── secrets/      # Google Cloud credentials
-│   └── ...
-└── README.md
-```
-
-### Author
-- **Santiago Navarro**
-- Computer Engineering Student
-- Universidad de Mendoza, Argentina
-
-### License
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
+[Español](#español) | [English](#english)
 
 ## Español
 
-### Descripción del Proyecto
-ArchIAtect es una herramienta innovadora de diseño arquitectónico que utiliza inteligencia artificial para generar bocetos planos de viviendas. Este proyecto fue desarrollado como tesis para la carrera de Ingeniería en Informática en la Universidad de Mendoza, sede San Rafael, Argentina.
+### Resumen
+ArchIAtect es la plataforma desarrollada para mi tesis de Ingeniería en Informática (Universidad de Mendoza, sede San Rafael). Combina IA generativa y heurísticas de diseño arquitectónico para convertir descripciones en lenguaje natural en planos habitacionales utilizables.
 
-### Características
-- Generación de planos mediante modelos de difusión de última generación
-- Autenticación de usuarios y gestión de proyectos
-- Interfaz de usuario moderna y responsiva
-- Arquitectura API RESTful
-- Manejo y almacenamiento seguro de archivos
+### Objetivos de la tesis
+- Automatizar la generación de planos 2D a partir de requisitos textuales.
+- Mantener coherencia espacial (adyacencias, proporciones y puertas) antes de la generación visual.
+- Proveer una interfaz web moderna con autenticación, gestión de proyectos y previsualizaciones exportables.
+- Ofrecer un backend reproducible y desplegable (Docker/Railway) con soporte GPU local o remoto.
 
-### Stack Tecnológico
-#### Frontend
-- Next.js 15
-- React 19
-- TypeScript
-- Tailwind CSS
-- Componentes Radix UI
-- Framer Motion para animaciones
-- React Hook Form para gestión de formularios
+### Arquitectura de alto nivel
+- **Frontend (Next.js 15 + React 19):** UI con Tailwind, Radix y formularios; páginas de login, registro, dashboard y generador interactivo.
+- **Backend (FastAPI + PostgreSQL):** API REST con JWT/Google OAuth, migraciones Alembic y servicios de favoritos, ratings y gestión de generaciones.
+- **Pipeline ML (`backend/app/ml/pipeline/floorplan_pipeline.py`):**
+  1) `TextUnderstandingModule` convierte el prompt en requerimientos estructurados (habitaciones, adyacencias, estilo) usando spaCy.
+  2) `LayoutGenerationModule` arma el layout en grilla mediante grafos y heurísticas de puertas, y produce imágenes para ControlNet y para el usuario.
+  3) `StableDiffusionControlNetModule` refina el layout en un plano estilizado con ControlNet (scribble) + LoRA propia.
+- **Infraestructura:** Docker Compose orquesta frontend, API, Postgres y Traefik. Almacenamiento en Google Cloud Storage para subidas/output cuando se despliega en nube. Servicio GPU local o remoto (`backend/app/gpu_service`).
 
-#### Backend
-- FastAPI
-- Python
-- SQLAlchemy
-- Alembic para migraciones de base de datos
-- Autenticación JWT
-- Soporte para Docker
-- Dependencias de IA/ML:
-  - PyTorch
-  - Diffusers
-  - Transformers
-  - Accelerate
-  - PEFT
-  - SpaCy
-  - NetworkX
-  - Matplotlib
+### Flujo de generación
+1. Usuario escribe un prompt (ej: “casa moderna, 3 dormitorios, cocina junto al comedor”).
+2. NLP → requerimientos estructurados (habitaciones, adyacencias, estilo).
+3. Layout → grilla, puertas y etiquetas; se guardan imágenes con y sin labels.
+4. Difusión → ControlNet + LoRA producen el plano final en alta adherencia al layout.
+5. Outputs guardados en `backend/output/` (JSON + PNG con labels + PNG para ControlNet + plano SD).
 
-### Comenzando
+### Requisitos
+- Node.js 18+
+- Python 3.11+ (se usa venv en `backend/`)
+- PostgreSQL
+- GPU con CUDA (recomendado para Stable Diffusion); CPU funciona en modo solo-layout.
+- Cuenta y bucket de Google Cloud Storage si se quiere almacenamiento remoto.
 
-#### Prerrequisitos
-- Node.js (v18 o superior)
-- Python 3.8+
-- Docker (opcional)
-- GPU compatible con CUDA (recomendado para inferencia del modelo de IA)
-- Base de datos PostgreSQL
-- Cuenta de Google Cloud Storage (para almacenamiento de archivos)
+### Puesta en marcha rápida (Docker Compose)
+1) Crear un `.env` en la raíz con las variables básicas:
+```
+POSTGRES_USER=archiatect
+POSTGRES_PASSWORD=archiatect
+POSTGRES_DB=archiatect
+SECRET_KEY=change_me
+BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+PGADMIN_DEFAULT_EMAIL=admin@example.com
+PGADMIN_DEFAULT_PASSWORD=admin
+```
+2) Ejecutar:
+```
+docker compose up --build
+```
+- Frontend: http://localhost:3000  
+- API: http://localhost:8000  |  Docs: http://localhost:8000/docs  
+- PgAdmin (opcional): http://localhost:5050
 
-#### Configuración del Entorno
-
-1. Entorno Frontend (.env en directorio frontend):
-```bash
+### Configuración manual (dev)
+Frontend:
+- `.env.local` en `frontend/`:
+```
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
-
-2. Entorno Backend (.env en directorio backend):
-```bash
-# Configuración de API
-SECRET_KEY=tu_clave_secreta_aqui
-BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8080"]
-
-# Base de datos PostgreSQL
-POSTGRES_SERVER=localhost
-POSTGRES_USER=tu_usuario_db
-POSTGRES_PASSWORD=tu_contraseña_db
-POSTGRES_DB=floor_plan_generator
-
-# PgAdmin (opcional)
-PGADMIN_DEFAULT_EMAIL=tu_email
-PGADMIN_DEFAULT_PASSWORD=tu_contraseña
-
-# Superusuario inicial (opcional)
-FIRST_SUPERUSER=tu_email
-FIRST_SUPERUSER_PASSWORD=tu_contraseña
-
-# Google Cloud Storage
-GOOGLE_APPLICATION_CREDENTIALS=backend/secrets/tu-archivo-credenciales.json
-GCS_BUCKET_NAME=tu-nombre-bucket
+- Instalar y correr:
 ```
-
-3. Configuración de Google Cloud Storage:
-   - Crear un bucket en Google Cloud Storage
-   - Crear una cuenta de servicio y descargar el archivo JSON de credenciales
-   - Crear un directorio `secrets` en la carpeta backend
-   - Colocar el archivo JSON de credenciales en el directorio `backend/secrets`
-   - Agregar `secrets/` a tu archivo `.gitignore`
-
-#### Instalación
-
-1. Clonar el repositorio:
-```bash
-git clone https://github.com/navarrx/ArchIAtect.git
-cd ArchIAtect
-```
-
-2. Configuración del Frontend:
-```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-3. Configuración del Backend:
-```bash
+Backend:
+- `.env` en `backend/` (resume lo usado por compose):
+```
+SECRET_KEY=change_me
+BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+POSTGRES_SERVER=localhost
+POSTGRES_USER=archiatect
+POSTGRES_PASSWORD=archiatect
+POSTGRES_DB=archiatect
+FIRST_SUPERUSER=admin@example.com
+FIRST_SUPERUSER_PASSWORD=admin
+GCS_BUCKET_NAME=tu-bucket
+GOOGLE_APPLICATION_CREDENTIALS=backend/secrets/creds.json
+GPU_MODE=local   # o remote si usas el túnel GPU
+```
+- Instalar y correr:
+```
 cd backend
 python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
+venv\Scripts\activate  # en Windows (o source venv/bin/activate en Unix)
 pip install -r requirements.txt
 python -m app.main
 ```
+- Migraciones: `alembic upgrade head`
 
-4. Acceder a la aplicación:
-- Frontend: http://localhost:3000
-- API Backend: http://localhost:8000
-- Documentación API: http://localhost:8000/docs
+### Modelos, datos y salidas
+- Pesos LoRA y ejemplos están en `backend/app/ml/lora/`.
+- spaCy `en_core_web_sm` se descarga automáticamente si no está presente.
+- Carpeta `backend/output/` contiene ejemplos de JSON e imágenes generadas.
+- La API puede trabajar sin SD si `GPU_MODE=local` pero no hay GPU; en ese caso solo retorna layout y visualizaciones con labels.
 
-### Estructura del Proyecto
-```
-ArchIAtect/
-├── frontend/          # Aplicación frontend Next.js
-├── backend/           # Aplicación backend FastAPI
-│   ├── secrets/      # Credenciales de Google Cloud
-│   └── ...
-└── README.md
-```
+### Páginas y funcionalidades principales
+- Registro/login (incluye flujo Google OAuth).
+- Generador: ingresa prompt, obtiene plano con labels y versión refinada.
+- Descubrir/Mis blueprints/Favoritos: galería y gestión de generaciones.
+- Perfil: datos del usuario y ajustes básicos.
+
+### Buenas prácticas para reproducibilidad
+- Fijar seeds al generar planos SD (la API expone esta opción en el pipeline).
+- Mantener sincronizados los pesos LoRA usados para inferencia y entrenamiento.
+- Registrar prompts y outputs para comparar estrategias (`strict`, `balanced`, `creative`, `multi_pass`).
+
+### Futuro y líneas de mejora
+- Ajuste fino de heurísticas de puertas y adyacencias con feedback de arquitectos.
+- Incorporar ventanas y mobiliario ligero en el layout antes de SD.
+- Métricas automáticas de calidad del plano (consistencia topológica, área).
+- Entrenamiento incremental del LoRA con datasets locales.
 
 ### Autor
-- **Santiago Navarro**
-- Estudiante de Ingeniería en Informática
-- Universidad de Mendoza, Argentina
+- **Santiago Navarro** — Tesis de Ingeniería en Informática, Universidad de Mendoza (San Rafael).
 
 ### Licencia
-Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
+MIT. Revisa `LICENSE` para detalles.
+
+---
+
+## English
+
+### Overview
+ArchIAtect is my Computer Engineering thesis project (Universidad de Mendoza, San Rafael). It turns natural-language housing requirements into 2D floor plans by combining NLP, graph-based layout generation, and a ControlNet + LoRA diffusion model.
+
+### Stack
+- **Frontend:** Next.js 15, React 19, TypeScript, Tailwind, Radix UI, Framer Motion.
+- **Backend:** FastAPI, SQLAlchemy, Alembic, JWT/Google OAuth, PostgreSQL, Docker.
+- **ML pipeline:** text parsing → layout graph generation → ControlNet + LoRA refinement.
+- **Infra:** Docker Compose with Traefik; optional GCS for storage; GPU service local/remote.
+
+### Quick start
+1) Root `.env` (same keys as in the Spanish section).  
+2) `docker compose up --build`  
+3) Frontend at `http://localhost:3000`, API at `http://localhost:8000` (docs at `/docs`).
+
+### Development
+- Frontend: set `NEXT_PUBLIC_API_URL`, run `npm install && npm run dev`.
+- Backend: create `.env`, `pip install -r requirements.txt`, run `python -m app.main`; migrate with `alembic upgrade head`.
+
+### Outputs
+Sample JSON layouts and PNGs live in `backend/output/`. LoRA weights are in `backend/app/ml/lora/`; spaCy downloads `en_core_web_sm` if missing.
+
+### License
+MIT. See `LICENSE`.
