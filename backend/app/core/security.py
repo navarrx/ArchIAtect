@@ -17,8 +17,9 @@ if not hasattr(bcrypt, "__about__"):
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto",
-    bcrypt__rounds=12,  # Use a standard number of rounds
-    bcrypt__ident="2b"  # Use the 2b version of bcrypt
+    bcrypt__rounds=12,            # Use a standard number of rounds
+    bcrypt__ident="2b",           # Use the 2b version of bcrypt
+    bcrypt__truncate_error=False  # Silently truncate >72b instead of raising
 )
 
 ALGORITHM = "HS256"
