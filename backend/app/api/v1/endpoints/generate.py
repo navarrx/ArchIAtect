@@ -9,7 +9,7 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/", response_model=GenerationResponse, tags=["Generation"])
+@router.post("", response_model=GenerationResponse, tags=["Generation"])
 def generate_floorplan_endpoint(
     req: GenerationRequest,
     db = Depends(get_db),
