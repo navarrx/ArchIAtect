@@ -2,9 +2,16 @@ from datetime import datetime, timedelta
 from typing import Any, Union
 
 from jose import jwt
+import bcrypt
 from passlib.context import CryptContext
 
 from app.core.config import settings
+
+# Ensure bcrypt exposes __about__.__version__ (some builds miss it and passlib logs errors)
+if not hasattr(bcrypt, "__about__"):
+    class _About:
+        __version__ = getattr(bcrypt, "__version__", "unknown")
+    bcrypt.__about__ = _About()
 
 # Configure password hashing with specific bcrypt settings
 pwd_context = CryptContext(
