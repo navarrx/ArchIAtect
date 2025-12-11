@@ -26,4 +26,6 @@ const nextConfig = {
   },
 }
 
+// This is a forced build
+
 export default nextConfig
