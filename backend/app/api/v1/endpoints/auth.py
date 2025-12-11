@@ -4,8 +4,9 @@ from typing import Any
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
-from app.core.security import create_access_token
+from app.core.security import create_access_token, get_password_hash
 from app.core.exceptions import UserNotFoundError
+from app.schemas.user import UserCreate
 from app.schemas.token import Token
 from app.schemas.user import UserUpdate
 from app.services.user_service import authenticate_user, UserService
@@ -57,6 +58,78 @@ async def login_for_access_token(
             detail="Credenciales incorrectas",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+
+@router.post("/register")
+async def register_user(user_in: UserCreate):
+    """
+    Register a new user with email and password.
+    """
+    db = SessionLocal()
+    try:
+        user_service = UserService(db)
+        
+        # Check if user already exists
+        try:
+            existing_user = await user_service.get_user_by_email(user_in.email)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El correo electrónico ya está registrado"
+            )
+        except UserNotFoundError:
+            pass  # User doesn't exist, we can create it
+        
+        # Validate password
+        if not user_in.password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La contraseña es requerida"
+            )
+        
+        # Handle name field - split into first_name and last_name if provided
+        first_name = user_in.first_name
+        last_name = user_in.last_name
+        if user_in.name and not (first_name or last_name):
+            name_parts = user_in.name.split(" ", 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ""
+        
+        # Create user data with hashed password
+        user_data = {
+            "email": user_in.email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "password_hash": get_password_hash(user_in.password),
+            "is_active": True
+        }
+        
+        user = await user_service.create_user(user_data)
+        
+        # Create access token
+        access_token = create_access_token(subject=user.id)
+        
+        return {
+            "access_token": access_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "profile_picture_url": user.profile_picture_url
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Registration error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error al registrar el usuario"
+        )
+    finally:
+        db.close()
+
 
 @router.get("/google/login")
 async def google_login():

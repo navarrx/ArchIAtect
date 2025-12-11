@@ -20,6 +20,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Optional[str] = None
+    name: Optional[str] = None  # Full name, will be split into first_name and last_name
 
 class UserUpdate(UserBase):
     email: Optional[str] = None
