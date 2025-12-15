@@ -120,12 +120,22 @@ async def register_user(user_in: UserCreate):
             }
         }
     except HTTPException:
+        db.rollback()
         raise
-    except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
+    except ValueError as e:
+        # Handle duplicate email or other validation errors from service
+        db.rollback()
+        logger.error(f"Registration validation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Error al registrar el usuario"
+            detail=str(e) if "already exists" in str(e).lower() else "Error de validación al registrar el usuario"
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Registration error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error al registrar el usuario: {str(e)}"
         )
     finally:
         db.close()
