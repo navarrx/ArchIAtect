@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Download, Loader2, Trash2, Heart, Filter, Calendar, Star, Sparkles } from "lucide-react"
+import { Download, Loader2, Trash2, Heart, Filter, Calendar, Star, Sparkles, Building2, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,6 +21,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Navigation, Pagination } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
+import FeedbackForm from '@/components/feedback-form'
 
 interface FavouriteBlueprint {
   id: number
@@ -46,6 +58,9 @@ export default function FavouritesPage() {
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest">("newest")
   const router = useRouter()
   const { toast } = useToast()
+  const [selectedBlueprint, setSelectedBlueprint] = useState<FavouriteBlueprint | null>(null)
+  const [feedback, setFeedback] = useState<any | null>(null)
+  const [loadingFeedback, setLoadingFeedback] = useState(false)
 
   useEffect(() => {
     const checkAuth = () => {
@@ -65,6 +80,30 @@ export default function FavouritesPage() {
       window.scrollTo({ top: 0, behavior: "smooth" })
     }
   }, [router])
+
+  useEffect(() => {
+    if (selectedBlueprint) {
+      setLoadingFeedback(true)
+      const token = localStorage.getItem('authToken')
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ratings/my/generation/${selectedBlueprint.generation.id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then(async (res) => {
+          if (res.ok) {
+            const data = await res.json()
+            setFeedback(data)
+          } else {
+            setFeedback(null)
+          }
+        })
+        .catch(() => setFeedback(null))
+        .finally(() => setLoadingFeedback(false))
+    } else {
+      setFeedback(null)
+    }
+  }, [selectedBlueprint])
 
   const fetchFavourites = async (token: string) => {
     try {
@@ -349,7 +388,8 @@ export default function FavouritesPage() {
             {filteredFavourites.map((favourite) => (
               <Card 
                 key={favourite.id} 
-                className="group overflow-hidden rounded-2xl border border-gray-200 hover:border-red-300 hover:shadow-xl transition-all duration-300 bg-white"
+                className="group overflow-hidden rounded-2xl arch-shadow border-border/50 bg-card/70 cursor-pointer hover:arch-shadow-lg transition-all duration-200"
+                onClick={() => setSelectedBlueprint(favourite)}
               >
                 <CardContent className="p-0">
                   <div className="aspect-[4/3] bg-gradient-to-br from-gray-50 to-gray-100 relative overflow-hidden">
@@ -408,47 +448,184 @@ export default function FavouritesPage() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleDownload(favourite)}
+                        onClick={(e) => { e.stopPropagation(); handleDownload(favourite); }}
                         disabled={!favourite.generation.sd_image_url && !favourite.generation.layout_image_url}
-                        className="flex-1 rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50"
+                        className="flex-1 rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50 h-10"
                       >
                         <Download className="mr-2 h-4 w-4" />
                         Descargar
                       </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
-                          >
-                            <Heart className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="rounded-2xl">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-lg">¿Quitar de favoritos?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-gray-600">
-                              ¿Estás seguro de que quieres quitar este plano de tus favoritos? Esta acción se puede deshacer.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleRemoveFavourite(favourite.id)}
-                              className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
+                      <div onClick={e => e.stopPropagation()} className="h-10 flex items-center">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 h-10"
                             >
-                              Quitar de favoritos
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                              <Heart className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="rounded-2xl">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="text-lg">¿Quitar de favoritos?</AlertDialogTitle>
+                              <AlertDialogDescription className="text-gray-600">
+                                ¿Estás seguro de que quieres quitar este plano de tus favoritos? Esta acción se puede deshacer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="rounded-xl">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => {
+                                  handleRemoveFavourite(favourite.id)
+                                  if (selectedBlueprint?.id === favourite.id) {
+                                    setSelectedBlueprint(null)
+                                  }
+                                }}
+                                className="bg-red-500 text-white hover:bg-red-600 rounded-xl"
+                              >
+                                Quitar de favoritos
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
             </div>
+
+          {/* Modal de Detalles */}
+          <Dialog open={!!selectedBlueprint} onOpenChange={() => setSelectedBlueprint(null)}>
+            <DialogContent className="max-w-6xl max-h-[90vh] rounded-2xl arch-shadow-lg border-border/50 bg-card/95 p-0 overflow-hidden">
+              {selectedBlueprint && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-0 h-full max-h-[90vh]">
+                  {/* Columna izquierda: imágenes */}
+                  <div className="p-6 space-y-4 border-r border-border/50">
+                    <div className="flex items-center justify-between">
+                      <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                        Plano #{selectedBlueprint.generation.id}
+                      </div>
+                      <span className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {new Date(selectedBlueprint.generation.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <Swiper
+                      modules={[Navigation, Pagination]}
+                      spaceBetween={0}
+                      slidesPerView={1}
+                      navigation
+                      pagination={{ clickable: true }}
+                      className="rounded-2xl overflow-hidden arch-shadow bg-muted/40"
+                      style={{ height: 'calc(90vh - 180px)' }}
+                    >
+                      {selectedBlueprint.generation.sd_image_url && (
+                        <SwiperSlide>
+                          <img
+                            src={selectedBlueprint.generation.sd_image_url}
+                            alt={`${selectedBlueprint.generation.prompt} - Stable Diffusion`}
+                            className="w-full h-full object-contain bg-muted/50"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </SwiperSlide>
+                      )}
+                      {selectedBlueprint.generation.layout_image_url && (
+                        <SwiperSlide>
+                          <img
+                            src={selectedBlueprint.generation.layout_image_url}
+                            alt={`${selectedBlueprint.generation.prompt} - Layout`}
+                            className="w-full h-full object-contain bg-muted/50"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </SwiperSlide>
+                      )}
+                    </Swiper>
+                  </div>
+
+                  {/* Columna derecha: detalles y reseña con scroll */}
+                  <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 40px)' }}>
+                    <div className="p-6 space-y-6">
+                      {/* Detalles */}
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <DialogTitle className="text-xl font-semibold leading-tight">Detalles del Plano</DialogTitle>
+                          <p className="text-sm text-muted-foreground">
+                            Vista generada por IA y layout base. Guarda, descarga y revisa la retroalimentación.
+                          </p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <h3 className="text-sm font-semibold text-muted-foreground">Descripción</h3>
+                          <div className="p-3 rounded-xl bg-muted/40 border border-border/50">
+                            <p className="text-sm text-foreground leading-relaxed">{selectedBlueprint.generation.prompt}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 rounded-xl bg-card border border-border/50 arch-shadow">
+                            <p className="text-xs text-muted-foreground mb-1">ID</p>
+                            <p className="text-sm font-semibold">#{selectedBlueprint.generation.id}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-card border border-border/50 arch-shadow">
+                            <p className="text-xs text-muted-foreground mb-1">Estado</p>
+                            <p className="text-sm font-semibold capitalize">{selectedBlueprint.generation.status}</p>
+                          </div>
+                        </div>
+
+                        <Button
+                          className="w-full rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 arch-shadow-lg"
+                          onClick={() => handleDownload(selectedBlueprint)}
+                          disabled={!selectedBlueprint.generation.sd_image_url && !selectedBlueprint.generation.layout_image_url}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Descargar plano
+                        </Button>
+                      </div>
+
+                      {/* Separador */}
+                      <div className="border-t border-border/50"></div>
+
+                      {/* Reseña */}
+                      <div className="space-y-3">
+                        <h3 className="text-lg font-semibold">Reseña</h3>
+                        {loadingFeedback ? (
+                          <div className="text-muted-foreground text-sm">Cargando reseña...</div>
+                        ) : feedback && feedback.rating ? (
+                          <div className="space-y-3 p-4 rounded-xl bg-muted/40 border border-border/50">
+                            <div className="flex items-center gap-1">
+                              {[1,2,3,4,5].map((star) => (
+                                <Star key={star} className={`h-5 w-5 ${star <= feedback.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
+                              ))}
+                            </div>
+                            {feedback.feedback?.selected_criticisms?.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {feedback.feedback.selected_criticisms.map((crit: string, idx: number) => (
+                                  <span key={idx} className="px-2 py-1 bg-muted rounded text-xs text-muted-foreground border border-border/50">{crit}</span>
+                                ))}
+                              </div>
+                            )}
+                            {feedback.feedback?.custom_feedback && (
+                              <div className="text-sm text-foreground bg-card/80 rounded p-2 border border-border/50">
+                                {feedback.feedback.custom_feedback}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <FeedbackForm generationId={selectedBlueprint.generation.id} onFeedbackSubmitted={() => setSelectedBlueprint(null)} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
           </>
         )}
       </div>
