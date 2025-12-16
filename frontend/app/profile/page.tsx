@@ -64,6 +64,11 @@ export default function ProfilePage() {
     }
 
     checkAuth()
+
+    // Asegurar scroll arriba al entrar en la página
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
   }, [router])
 
   const fetchUserData = async (token: string) => {
@@ -205,8 +210,10 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-grid opacity-20" />
+        <div className="absolute inset-0 arch-gradient-overlay" />
+        <div className="relative z-10 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Cargando perfil...</p>
         </div>
@@ -218,9 +225,11 @@ export default function ProfilePage() {
   const fullName = `${userData.first_name || ""} ${userData.last_name || ""}`.trim() || "Sin nombre"
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      {/* Header Section - Apple Style */}
-      <section className="py-16 px-4 md:px-6">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+      {/* Header Section */}
+      <section className="py-16 px-4 md:px-6 relative z-10">
         <div className="container mx-auto max-w-4xl">
           {/* Back Button */}
           <div className="mb-8">
@@ -233,7 +242,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Profile Header */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-12 fade-in-up">
             <div className="relative inline-block mb-6">
               <Avatar className="h-32 w-32 border-4 border-background shadow-2xl">
                 {userData.profile_picture_url ? (

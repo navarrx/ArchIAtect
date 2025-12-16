@@ -59,6 +59,11 @@ export default function FavouritesPage() {
     }
 
     checkAuth()
+
+    // Asegurar scroll arriba al entrar en la página
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" })
+    }
   }, [router])
 
   const fetchFavourites = async (token: string) => {
@@ -190,16 +195,27 @@ export default function FavouritesPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-16 px-4 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-arch-grid opacity-20" />
+        <div className="absolute inset-0 arch-gradient-overlay" />
+        <div className="relative z-10 container mx-auto px-4">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Cargando favoritos...</p>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="container mx-auto py-12 px-4 md:px-6 max-w-7xl">
-      {/* Header Section */}
-      <div className="text-center mb-12">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+
+      <div className="container mx-auto py-16 px-4 md:px-6 max-w-7xl relative z-10">
+        {/* Header Section */}
+        <div className="text-center mb-12 fade-in-up">
         <div className="flex items-center justify-center mb-4">
           <div className="relative">
             <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
@@ -210,7 +226,7 @@ export default function FavouritesPage() {
             </div>
           </div>
         </div>
-        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
           Mis Favoritos
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -218,8 +234,8 @@ export default function FavouritesPage() {
         </p>
       </div>
 
-      {/* Stats and Actions */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl border border-gray-200/50">
+        {/* Stats and Actions */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 p-6 bg-card/70 rounded-2xl border border-border/50 arch-shadow fade-in-up" style={{ animationDelay: "0.1s" }}>
         <div className="text-center md:text-left mb-4 md:mb-0">
           <div className="text-2xl font-bold text-gray-900">{filteredFavourites.length}</div>
           <div className="text-sm text-muted-foreground">
@@ -242,8 +258,8 @@ export default function FavouritesPage() {
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Search and Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in-up" style={{ animationDelay: "0.15s" }}>
         <div className="space-y-2">
           <Label htmlFor="search" className="text-sm font-medium text-gray-700">Buscar favoritos</Label>
           <div className="relative">
@@ -271,7 +287,7 @@ export default function FavouritesPage() {
         </div>
       </div>
 
-      {error && (
+        {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6">
           <p className="flex items-center">
             <AlertCircle className="mr-2 h-4 w-4" />
@@ -280,7 +296,7 @@ export default function FavouritesPage() {
         </div>
       )}
 
-      {filteredFavourites.length === 0 ? (
+        {filteredFavourites.length === 0 ? (
         <div className="text-center py-20">
           {favourites.length === 0 ? (
             <>
@@ -327,9 +343,9 @@ export default function FavouritesPage() {
             </>
           )}
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 fade-in-up" style={{ animationDelay: "0.2s" }}>
             {filteredFavourites.map((favourite) => (
               <Card 
                 key={favourite.id} 
@@ -432,9 +448,10 @@ export default function FavouritesPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        </>
-      )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   )
 } 
