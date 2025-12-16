@@ -80,7 +80,7 @@ export default function FeedbackForm({ generationId, onFeedbackSubmitted }: Feed
         }
       }
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ratings`, feedbackData)
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/ratings/`, feedbackData)
 
       toast({
         title: "¡Gracias!",
