@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useAuth } from "@/hooks/useAuth.tsx"
 import { useTheme } from "next-themes"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -22,6 +23,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setMounted(true)
@@ -29,6 +31,10 @@ export default function Navbar() {
 
   const handleLogout = () => {
     logout()
+    toast({
+      title: "Sesión cerrada",
+      description: "Has cerrado sesión correctamente.",
+    })
     window.location.href = "/login"
   }
 

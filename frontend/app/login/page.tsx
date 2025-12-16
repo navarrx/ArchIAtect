@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2, ArrowLeft, Sparkles, Building2, ShieldCheck, Wand2 } from "lucide-react"
@@ -29,6 +29,19 @@ export default function LoginPage() {
   })
   const router = useRouter()
   const { login } = useAuth()
+
+  // Mostrar aviso si viene de un registro exitoso y asegurar scroll arriba
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    window.scrollTo({ top: 0, behavior: "smooth" })
+
+    const flag = localStorage.getItem("archia_register_success")
+    if (flag) {
+      toast.success("Cuenta creada, inicia sesión para continuar")
+      localStorage.removeItem("archia_register_success")
+    }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -132,10 +145,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+
+      <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-6xl relative z-10">
         {/* Panel informativo */}
-        <div className="space-y-6">
+        <div className="space-y-6 fade-in-up">
           <h1 className="text-4xl font-bold leading-tight">
             Inicia sesión y continúa tus <span className="text-primary">bocetos arquitectónicos</span>
           </h1>
@@ -182,7 +198,7 @@ export default function LoginPage() {
         </div>
 
         {/* Panel de formulario */}
-        <div className="flex justify-center">
+        <div className="flex justify-center fade-in-up" style={{ animationDelay: "0.1s" }}>
           <Card className="w-full max-w-[420px] arch-shadow border-border/50">
         <CardHeader>
           {resetStep ? (

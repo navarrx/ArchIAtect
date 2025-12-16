@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Loader2, Sparkles, Building2, ShieldCheck, Wand2 } from "lucide-react"
@@ -24,6 +24,12 @@ export default function RegisterPage() {
   })
   const router = useRouter()
   const { toast } = useToast()
+
+  // Asegurar que siempre se cargue con el scroll arriba
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -73,6 +79,9 @@ export default function RegisterPage() {
         description: "Tu cuenta ha sido creada correctamente",
       })
 
+      // Marcar éxito para mostrar aviso al llegar a /login
+      localStorage.setItem("archia_register_success", "1")
+
       // Redirect to login page
       router.push("/login")
     } catch (error) {
@@ -101,10 +110,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30">
-      <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/30 relative overflow-hidden">
+      <div className="absolute inset-0 bg-arch-grid opacity-20" />
+      <div className="absolute inset-0 arch-gradient-overlay" />
+
+      <div className="container mx-auto px-4 py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-6xl relative z-10">
         {/* Panel informativo */}
-        <div className="space-y-6">
+        <div className="space-y-6 fade-in-up">
           <h1 className="text-4xl font-bold leading-tight">
             Crea tu cuenta y comienza a <span className="text-primary">generar bocetos</span> con IA
           </h1>
@@ -151,7 +163,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Panel de formulario */}
-        <div className="flex justify-center">
+        <div className="flex justify-center fade-in-up" style={{ animationDelay: "0.1s" }}>
           <Card className="w-full max-w-[420px] arch-shadow border-border/50">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Crear Cuenta</CardTitle>
