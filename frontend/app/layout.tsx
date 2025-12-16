@@ -10,7 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth.tsx"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "AI Architectural Blueprint Generator",
+  title: "ArchIAtect",
   description: "Generate architectural blueprint sketches using artificial intelligence",
     generator: 'v0.dev'
 }
